@@ -1,0 +1,23 @@
+Subject: Application: {{role}} — {{sender_name}}
+
+Hi {{greeting_name}},
+
+I'd like to apply for the {{role}} position at {{company}}. My resume is attached.
+
+I'm an AI engineer building production LLM systems. Most recently I architected a hybrid
+retrieval platform over 1.7M+ legal documents — Pinecone semantic search and MongoDB keyword
+search behind adaptive routing, with a Cohere-reranked two-stage retrieval layer fed by an
+event-driven vectorization pipeline (SQS workers, OCR, semantic chunking). Before that I built
+a HubSpot migration platform that moves 5,000+ CRM assets per run through a parallel n8n
+pipeline with idempotency checks and rate-limit handling.
+
+Day to day that means Python, PyTorch, LangChain, FastAPI, Docker and AWS, on top of a CS
+degree from FAST-NUCES Islamabad.
+
+I'd welcome the chance to talk about how I could contribute to {{company}}.
+
+Best regards,
+{{sender_name}}
+{{phone}} · {{sender_email}}
+{{linkedin}}
+{{github}}

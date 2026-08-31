@@ -1,0 +1,16 @@
+# Never ship the local-machine version or anything holding a credential.
+# Paths are anchored with "/" so they do not also match api/assets/...
+/config.json
+/config.example.json
+/.ui_url
+/sent_log.csv
+/previews/
+/web/
+/web_ui.py
+/send_applications.py
+/jobs.csv
+/templates/
+/where_to_find_emails.md
+/README.md
+__pycache__/
+*.pyc

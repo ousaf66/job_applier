@@ -1,0 +1,16 @@
+Subject: Application — {{role}} at {{company}}
+
+Hi {{greeting_name}},
+
+I'm applying for the {{role}} role at {{company}}; my resume is attached.
+
+I'm an AI engineer with production experience in RAG systems, LLM fine-tuning and deployment,
+and MLOps — Python, PyTorch, LangChain, FastAPI, Docker and AWS. My current work is a hybrid
+search platform serving 1.7M+ documents with a two-stage reranked retrieval layer.
+
+Happy to share more if it's useful.
+
+Best regards,
+{{sender_name}}
+{{phone}} · {{sender_email}}
+{{linkedin}}

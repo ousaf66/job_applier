@@ -1,0 +1,602 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Job Application Mailer</title>
+<style>
+:root{
+  --bg:#f5f6f8; --card:#fff; --ink:#12151a; --muted:#6b7480; --line:#e3e7ed;
+  --accent:#2f6df6; --good:#177f4b; --warn:#9a6a10; --bad:#c0392b;
+  --chip:#eef1f6; --shadow:0 1px 2px rgba(16,24,40,.06),0 1px 3px rgba(16,24,40,.05);
+}
+@media (prefers-color-scheme:dark){
+  :root{ --bg:#0e1116; --card:#161b22; --ink:#e6ebf1; --muted:#93a0b0; --line:#242c37;
+         --accent:#5b8cff; --good:#3fbe7d; --warn:#dda63c; --bad:#f27a68;
+         --chip:#1d242d; --shadow:none; }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
+header{padding:20px 24px 14px;border-bottom:1px solid var(--line);background:var(--card)}
+h1{margin:0;font-size:17px;letter-spacing:-.01em}
+h1 span{font-weight:400;color:var(--muted);font-size:12.5px;margin-left:10px;letter-spacing:0}
+.pills{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.pill{font-size:12px;padding:3px 10px;border-radius:999px;background:var(--chip);color:var(--muted)}
+.pill b{color:var(--ink);font-weight:600}
+.pill.good{background:color-mix(in srgb,var(--good) 14%,transparent);color:var(--good)}
+.pill.bad{background:color-mix(in srgb,var(--bad) 14%,transparent);color:var(--bad)}
+.pill.warn{background:color-mix(in srgb,var(--warn) 16%,transparent);color:var(--warn)}
+nav{display:flex;gap:2px;padding:0 24px;background:var(--card);border-bottom:1px solid var(--line);
+  position:sticky;top:0;z-index:5;overflow-x:auto}
+nav button{background:none;border:0;border-bottom:2px solid transparent;padding:11px 14px;
+  font:inherit;color:var(--muted);cursor:pointer;white-space:nowrap}
+nav button.on{color:var(--ink);border-bottom-color:var(--accent);font-weight:600}
+main{max-width:1120px;margin:0 auto;padding:22px 24px 80px}
+section{display:none} section.on{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px;
+  margin-bottom:16px;box-shadow:var(--shadow)}
+.card h2{margin:0 0 4px;font-size:14px}
+.hint{color:var(--muted);font-size:12.5px;margin:0 0 14px}
+.row{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
+input,select,textarea{font:inherit;color:var(--ink);background:var(--bg);
+  border:1px solid var(--line);border-radius:7px;padding:7px 9px;width:100%}
+input:focus,select:focus,textarea:focus{outline:2px solid color-mix(in srgb,var(--accent) 40%,transparent);
+  outline-offset:-1px;border-color:var(--accent)}
+textarea{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;resize:vertical}
+button.btn{font:inherit;font-weight:500;padding:8px 14px;border-radius:7px;cursor:pointer;
+  border:1px solid var(--line);background:var(--card);color:var(--ink)}
+button.btn:hover{border-color:var(--muted)}
+button.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+button.btn.danger{background:var(--bad);border-color:var(--bad);color:#fff}
+button.btn:disabled{opacity:.45;cursor:not-allowed}
+button.link{background:none;border:0;color:var(--accent);cursor:pointer;font:inherit;padding:2px 4px}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;
+  color:var(--muted);font-weight:600;padding:0 6px 8px}
+td{padding:3px 6px;vertical-align:middle;border-top:1px solid var(--line)}
+td input,td select{padding:6px 8px}
+tr.detail td{background:var(--bg);padding:12px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+@media(max-width:760px){.grid2,.grid3{grid-template-columns:1fr}}
+.badge{display:inline-block;font-size:11px;padding:2px 7px;border-radius:5px;white-space:nowrap}
+.badge.ok{background:color-mix(in srgb,var(--good) 14%,transparent);color:var(--good)}
+.badge.no{background:color-mix(in srgb,var(--warn) 16%,transparent);color:var(--warn)}
+.badge.sent{background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent)}
+pre{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:14px;
+  font:12.5px/1.55 ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap;
+  overflow-x:auto;margin:0;min-height:90px;max-height:460px;overflow-y:auto}
+.split{display:grid;grid-template-columns:250px 1fr;gap:14px}
+@media(max-width:760px){.split{grid-template-columns:1fr}}
+.list{border:1px solid var(--line);border-radius:8px;overflow:hidden;max-height:460px;overflow-y:auto}
+.list button{display:block;width:100%;text-align:left;background:none;border:0;
+  border-bottom:1px solid var(--line);padding:9px 11px;font:inherit;color:var(--ink);cursor:pointer}
+.list button:hover{background:var(--bg)}
+.list button.on{background:color-mix(in srgb,var(--accent) 12%,transparent);color:var(--accent);font-weight:600}
+.note{border-left:3px solid var(--warn);padding:9px 12px;background:var(--bg);border-radius:0 7px 7px 0;
+  font-size:12.5px;color:var(--muted);margin-bottom:14px}
+.note.bad{border-left-color:var(--bad)}
+.note b{color:var(--ink)}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);
+  color:var(--bg);padding:9px 18px;border-radius:8px;font-size:13px;opacity:0;
+  transition:opacity .2s;pointer-events:none;z-index:20}
+.toast.show{opacity:1}
+.muted{color:var(--muted)}
+.right{margin-left:auto}
+.spin{display:inline-block;width:11px;height:11px;border:2px solid var(--line);
+  border-top-color:var(--accent);border-radius:50%;animation:sp .7s linear infinite;vertical-align:-1px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.hrow{display:flex;align-items:center;gap:12px}
+.hrow h1{flex:1}
+#login{position:fixed;inset:0;background:var(--bg);display:none;align-items:center;
+  justify-content:center;z-index:50;padding:24px}
+#login.show{display:flex}
+#login form{background:var(--card);border:1px solid var(--line);border-radius:12px;
+  padding:26px;width:100%;max-width:350px;box-shadow:var(--shadow)}
+#login h2{margin:0 0 4px;font-size:16px}
+#login input{margin:14px 0 12px}
+#login button{width:100%}
+#loginErr{color:var(--bad);min-height:18px;margin:10px 0 0}
+.runbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:16px;
+  padding-top:16px;border-top:1px solid var(--line)}
+.runbar .muted{flex:1;min-width:150px;font-size:12.5px}
+</style>
+</head>
+<body>
+
+<div id="login">
+  <form id="loginForm">
+    <h2>Job Application Mailer</h2>
+    <p class="hint">Enter your login password.</p>
+    <input id="loginPw" type="password" autocomplete="current-password" placeholder="Password">
+    <button class="btn primary" type="submit">Log in</button>
+    <p class="hint" id="loginErr"></p>
+  </form>
+</div>
+
+<header>
+  <div class="hrow">
+    <h1>Job Application Mailer <span>nothing is sent until you press Send</span></h1>
+    <button class="btn" id="logout" hidden>Log out</button>
+  </div>
+  <div class="pills" id="pills"></div>
+</header>
+
+<nav id="tabs">
+  <button data-tab="queue" class="on">Queue</button>
+  <button data-tab="run">Run</button>
+  <button data-tab="previews">Previews</button>
+  <button data-tab="log">Sent log</button>
+  <button data-tab="templates">Email text</button>
+  <button data-tab="setup">Setup</button>
+</nav>
+
+<main>
+
+<section id="tab-queue" class="on">
+  <div class="card">
+    <h2>Your queue</h2>
+    <p class="hint">One row per application. <b>Company</b>, <b>role</b> and a valid <b>email</b> are
+      required — anything else is for your own records. Leave status blank to send it;
+      use <b>hold</b> or <b>skip</b> to park a row.</p>
+    <div class="row" style="margin-bottom:12px">
+      <button class="btn" id="addRow">+ Add company</button>
+      <button class="btn primary right" id="saveJobs">Save queue</button>
+    </div>
+    <table id="jobsTable"><thead><tr>
+      <th style="width:20%">Company</th><th style="width:20%">Role</th>
+      <th style="width:14%">Contact</th><th style="width:22%">Email</th>
+      <th style="width:11%">Status</th><th style="width:13%">Will send?</th><th></th>
+    </tr></thead><tbody id="jobsBody"></tbody></table>
+    <div class="runbar">
+      <span class="muted" id="qSummary"></span>
+      <button class="btn" id="qDry">Dry run</button>
+      <button class="btn" id="qTest">Send test to myself</button>
+      <button class="btn danger" id="qSend">Send for real</button>
+    </div>
+  </div>
+</section>
+
+<section id="tab-run">
+  <div class="card">
+    <h2>Run</h2>
+    <p class="hint">Always dry-run first and read a couple of previews. Then send one test to
+      yourself to prove the login and the attachment. Only then send for real.</p>
+    <div id="runBlock"></div>
+    <div class="grid3" style="margin-bottom:14px">
+      <div><label>Email template</label><select id="tpl"></select></div>
+      <div><label>Max emails this run</label><input id="limit" type="number" min="1" value="25"></div>
+      <div><label>Seconds between sends</label><input id="delay" type="number" min="0" value="45"></div>
+    </div>
+    <div style="margin-bottom:16px">
+      <label>Only companies containing (optional)</label>
+      <input id="only" placeholder="e.g. Densight — leave blank for all">
+    </div>
+    <div class="row">
+      <button class="btn primary" id="btnDry">1 · Dry run — write previews</button>
+      <button class="btn" id="btnTest">2 · Send one test to myself</button>
+      <button class="btn danger right" id="btnSend">3 · Send for real</button>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Output <span id="runSpin"></span></h2>
+    <p class="hint" id="runMode">Nothing has run yet.</p>
+    <pre id="console">—</pre>
+  </div>
+</section>
+
+<section id="tab-previews">
+  <div class="card">
+    <h2>Previews</h2>
+    <p class="hint">Exactly what would be sent. Written by a dry run, and cleared at the start
+      of each one so this folder always reflects a single run.</p>
+    <div class="split">
+      <div class="list" id="prevList"></div>
+      <pre id="prevBody">Run a dry run to generate previews.</pre>
+    </div>
+  </div>
+</section>
+
+<section id="tab-log">
+  <div class="card">
+    <h2>Sent log</h2>
+    <p class="hint">Append-only record of every send. The same address and company is never
+      mailed twice, even if you duplicate a row.</p>
+    <div id="logBody"></div>
+  </div>
+</section>
+
+<section id="tab-templates">
+  <div class="card">
+    <h2>Email text</h2>
+    <p class="hint">The first line must stay <b>Subject: ...</b>. Placeholders like
+      <b>{{company}}</b>, <b>{{role}}</b> and <b>{{greeting_name}}</b> are filled per row —
+      a blank contact becomes "Hiring Team".</p>
+    <div class="row" style="margin-bottom:12px">
+      <div style="width:230px"><label>Template</label><select id="tplPick"></select></div>
+      <button class="btn primary right" id="saveTpl">Save template</button>
+    </div>
+    <textarea id="tplText" rows="22"></textarea>
+  </div>
+</section>
+
+<section id="tab-setup">
+  <div class="card">
+    <h2>Setup</h2>
+    <p class="hint">Stored in config.json on this Mac, permissions 600, git-ignored.
+      The app password is never sent back to this page once saved.</p>
+    <div id="setupNote"></div>
+    <div class="grid2">
+      <div><label>Your name</label><input id="c_sender_name"></div>
+      <div><label>Gmail address</label><input id="c_sender_email"></div>
+    </div>
+    <div style="margin-top:12px">
+      <label>Google App Password — 16 characters, not your normal password</label>
+      <input id="c_app_password" type="password" autocomplete="off">
+      <p class="hint" style="margin:6px 0 0">Get one at
+        <span class="muted">myaccount.google.com/apppasswords</span> (needs 2-Step Verification on).
+        Leave blank to keep the saved one.</p>
+    </div>
+    <div style="margin-top:12px"><label>Resume file</label><input id="c_resume_path"></div>
+    <div class="grid2" style="margin-top:12px">
+      <div><label>Attachment filename</label><input id="c_resume_filename"></div>
+      <div><label>Reply-to (optional)</label><input id="c_reply_to"></div>
+    </div>
+    <div class="grid2" style="margin-top:12px">
+      <div><label>Phone</label><input id="c_phone"></div>
+      <div><label>LinkedIn</label><input id="c_linkedin"></div>
+    </div>
+    <div class="grid2" style="margin-top:12px">
+      <div><label>GitHub</label><input id="c_github"></div>
+      <div><label>Portfolio</label><input id="c_portfolio"></div>
+    </div>
+    <div class="row" style="margin-top:16px">
+      <button class="btn primary right" id="saveCfg">Save setup</button>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Login password</h2>
+    <p class="hint">Needed to open this page from your phone or another computer. Stored as a
+      PBKDF2 hash in config.json — the password itself is never written to disk and never
+      sent back to this page.</p>
+    <div id="uipwNote"></div>
+    <div class="row">
+      <div style="flex:1;min-width:220px">
+        <label>New login password (8 characters or more)</label>
+        <input id="c_ui_password" type="password" autocomplete="new-password">
+      </div>
+      <button class="btn primary" id="saveUiPw">Set password</button>
+    </div>
+    <p class="hint" style="margin:12px 0 0">Setting or removing it signs out every device.
+      <button class="link" id="clearUiPw">Remove the login password</button></p>
+  </div>
+</section>
+
+</main>
+<div class="toast" id="toast"></div>
+
+<script>
+const BOOT = "__TOKEN__";
+let TOK = "";
+const $ = (id) => document.getElementById(id);
+let S = null, dirty = false, openRow = -1, polling = null;
+
+async function api(path, body) {
+  const opts = { headers: { "X-Token": TOK, "Content-Type": "application/json" } };
+  if (body !== undefined) { opts.method = "POST"; opts.body = JSON.stringify(body); }
+  const r = await fetch(path, opts);
+  if (r.status === 403) { showLogin(); throw new Error("Please log in"); }
+  const j = await r.json().catch(() => ({ error: "bad response" }));
+  if (j.error) throw new Error(j.error);
+  return j;
+}
+function toast(msg) {
+  const t = $("toast"); t.textContent = msg; t.classList.add("show");
+  clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove("show"), 2600);
+}
+const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g,
+  (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+/* ---------- tabs ---------- */
+$("tabs").addEventListener("click", (e) => {
+  const b = e.target.closest("button[data-tab]"); if (!b) return;
+  show(b.dataset.tab);
+});
+function show(name) {
+  document.querySelectorAll("nav button").forEach((b) => b.classList.toggle("on", b.dataset.tab === name));
+  document.querySelectorAll("main section").forEach((s) => s.classList.toggle("on", s.id === "tab-" + name));
+}
+
+/* ---------- state ---------- */
+async function refresh() {
+  S = await api("/api/state");
+  renderPills(); renderJobs(); renderRun(); renderPreviews(); renderLog(); renderSetup(); renderTplPick();
+}
+
+function renderPills() {
+  const c = S.config, n = S.counts;
+  const pills = [];
+  pills.push(c.ready
+    ? '<span class="pill good">Setup complete</span>'
+    : '<span class="pill bad">Setup needed: ' + esc(c.missing.join(", ") || "resume file missing") + "</span>");
+  pills.push('<span class="pill">Queue <b>' + n.total + "</b></span>");
+  pills.push('<span class="pill' + (n.ready ? " good" : "") + '">Ready to send <b>' + n.ready + "</b></span>");
+  if (n.blocked) pills.push('<span class="pill warn">Held back <b>' + n.blocked + "</b></span>");
+  pills.push('<span class="pill">Sent so far <b>' + S.sent_log.length + "</b></span>");
+  $("pills").innerHTML = pills.join("");
+}
+
+/* ---------- queue ---------- */
+function renderJobs() {
+  const body = $("jobsBody");
+  if (!S.jobs.length) {
+    body.innerHTML = '<tr><td colspan="7" class="muted" style="padding:20px">No rows yet — add a company.</td></tr>';
+    return;
+  }
+  body.innerHTML = S.jobs.map((j, i) => {
+    const status = (j.status || "").toLowerCase();
+    let will = '<span class="badge ok">yes</span>';
+    if (status === "sent") will = '<span class="badge sent">already sent</span>';
+    else if (j._skip) will = '<span class="badge no" title="' + esc(j._skip) + '">' + esc(j._skip) + "</span>";
+    const sel = ["", "hold", "skip", "sent"].map((v) =>
+      '<option value="' + v + '"' + (status === v ? " selected" : "") + ">" + (v || "ready") + "</option>").join("");
+    let html =
+      "<tr>" +
+      td(i, "company") + td(i, "role") + td(i, "contact_name") + td(i, "email") +
+      '<td><select data-i="' + i + '" data-f="status">' + sel + "</select></td>" +
+      "<td>" + will + "</td>" +
+      '<td style="text-align:right;white-space:nowrap">' +
+        '<button class="link" data-open="' + i + '">' + (openRow === i ? "hide" : "more") + "</button>" +
+        '<button class="link" data-del="' + i + '" title="delete row">&times;</button></td></tr>';
+    if (openRow === i) {
+      html += '<tr class="detail"><td colspan="7"><div class="grid3">' +
+        field(i, "source", "Source") + field(i, "location", "Location") + field(i, "job_url", "Job URL") +
+        "</div><div style='margin-top:10px'><label>Notes</label>" +
+        '<textarea rows="3" data-i="' + i + '" data-f="notes">' + esc(j.notes) + "</textarea></div>" +
+        (j.sent_at ? '<p class="hint" style="margin:8px 0 0">Sent ' + esc(j.sent_at) + "</p>" : "") +
+        "</td></tr>";
+    }
+    return html;
+  }).join("");
+}
+const td = (i, f) => '<td><input data-i="' + i + '" data-f="' + f + '" value="' + esc(S.jobs[i][f]) + '"></td>';
+const field = (i, f, label) => "<div><label>" + label + '</label><input data-i="' + i + '" data-f="' + f +
+  '" value="' + esc(S.jobs[i][f]) + '"></div>';
+
+$("jobsBody").addEventListener("input", (e) => {
+  const el = e.target; if (!el.dataset.f) return;
+  S.jobs[+el.dataset.i][el.dataset.f] = el.value;
+  dirty = true; $("saveJobs").textContent = "Save queue •";
+});
+$("jobsBody").addEventListener("click", (e) => {
+  const o = e.target.closest("[data-open]"), d = e.target.closest("[data-del]");
+  if (o) { openRow = openRow === +o.dataset.open ? -1 : +o.dataset.open; renderJobs(); }
+  if (d) {
+    const i = +d.dataset.del;
+    if (confirm("Delete " + (S.jobs[i].company || "this row") + " from the queue?")) {
+      S.jobs.splice(i, 1); openRow = -1; dirty = true; renderJobs();
+    }
+  }
+});
+$("addRow").onclick = () => {
+  const blank = {}; S.header.forEach((h) => (blank[h] = "")); blank._skip = "no email address";
+  S.jobs.push(blank); openRow = S.jobs.length - 1; dirty = true; renderJobs();
+};
+$("saveJobs").onclick = async () => {
+  try {
+    const r = await api("/api/jobs", { rows: S.jobs });
+    dirty = false; $("saveJobs").textContent = "Save queue";
+    await refresh(); toast(r.saved + " rows saved to jobs.csv");
+  } catch (e) { toast("Could not save: " + e.message); }
+};
+window.addEventListener("beforeunload", (e) => { if (dirty) { e.preventDefault(); e.returnValue = ""; } });
+
+/* ---------- run ---------- */
+function renderRun() {
+  const c = S.config;
+  $("tpl").innerHTML = S.templates.map((t) => '<option>' + esc(t) + "</option>").join("");
+  $("limit").value = S.defaults.limit; $("delay").value = S.defaults.delay;
+  const ok = c.ready;
+  ["btnDry", "btnTest", "btnSend", "qDry", "qTest", "qSend"]
+    .forEach((b) => ($(b).disabled = !ok));
+  const n = S.counts;
+  $("qSummary").textContent = ok
+    ? n.ready + " ready to send · " + n.blocked + " held back"
+    : "Finish Setup before you can run anything.";
+  $("runBlock").innerHTML = ok ? "" :
+    '<div class="note bad"><b>Setup is not finished.</b> ' + esc(c.missing.join(", ")) +
+    (c.resume_ok ? "" : (c.resume_path ? " · resume not found at " + esc(c.resume_full) : "")) +
+    ' — fill it in on the Setup tab. Every mode, including the dry run, needs it.</div>';
+}
+const params = () => ({
+  template: $("tpl").value, limit: +$("limit").value, delay: +$("delay").value, only: $("only").value,
+});
+$("btnDry").onclick = async () => {
+  setConsole("Building previews...", "dry run");
+  try {
+    const r = await api("/api/dryrun", params());
+    let out = r.count + " email" + (r.count === 1 ? "" : "s") + " ready. Nothing was sent.\n";
+    r.written.forEach((n) => (out += "  preview  " + n + "\n"));
+    if (r.skipped.length) {
+      out += "\nHeld back:\n";
+      r.skipped.forEach(([c, why]) => (out += "  " + c.padEnd(28) + why + "\n"));
+    }
+    out += "\nOpen the Previews tab and read a couple before sending.";
+    setConsole(out, "dry run — finished");
+    await refresh();
+    if (r.count) show("previews");
+  } catch (e) { setConsole("ERROR: " + e.message, "dry run — failed"); }
+};
+$("btnTest").onclick = async () => {
+  try { await api("/api/test", params()); setConsole("Starting...", "test email"); poll(); }
+  catch (e) { toast(e.message); }
+};
+$("btnSend").onclick = async () => {
+  const ready = S.counts.ready, only = $("only").value.trim();
+  const n = Math.min(ready, +$("limit").value);
+  if (!n) return toast("Nothing is ready to send.");
+  const msg = "Send " + n + " real email" + (n === 1 ? "" : "s") +
+    (only ? ' (only companies matching "' + only + '")' : "") +
+    ", " + $("delay").value + " seconds apart?\n\nThis cannot be undone.";
+  if (!confirm(msg)) return;
+  try { await api("/api/send", params()); setConsole("Connecting to Gmail...", "sending"); poll(); }
+  catch (e) { toast(e.message); }
+};
+function setConsole(text, mode) {
+  $("console").textContent = text; $("runMode").textContent = mode || "";
+  show("run");
+}
+function poll() {
+  clearInterval(polling);
+  polling = setInterval(async () => {
+    const r = await api("/api/run");
+    $("console").textContent = r.lines.join("\n") || "working...";
+    $("console").scrollTop = $("console").scrollHeight;
+    $("runSpin").innerHTML = r.active ? '<span class="spin"></span>' : "";
+    $("runMode").textContent = r.active ? r.mode + " — running" : r.mode + " — finished " + r.finished;
+    if (!r.active) { clearInterval(polling); await refresh(); }
+  }, 1000);
+}
+
+/* ---------- previews ---------- */
+function renderPreviews() {
+  $("prevList").innerHTML = S.previews.length
+    ? S.previews.map((p) => '<button data-p="' + esc(p) + '">' + esc(p.replace(/\.txt$/, "")) + "</button>").join("")
+    : '<div class="muted" style="padding:14px">No previews yet.</div>';
+}
+$("prevList").addEventListener("click", async (e) => {
+  const b = e.target.closest("[data-p]"); if (!b) return;
+  document.querySelectorAll("#prevList button").forEach((x) => x.classList.remove("on"));
+  b.classList.add("on");
+  const r = await api("/api/preview?name=" + encodeURIComponent(b.dataset.p));
+  $("prevBody").textContent = r.text;
+});
+
+/* ---------- sent log ---------- */
+function renderLog() {
+  if (!S.sent_log.length) {
+    $("logBody").innerHTML = '<p class="muted">Nothing has been sent yet. The log file is created ' +
+      "on the first successful send.</p>";
+    return;
+  }
+  const rows = S.sent_log.slice().reverse();
+  $("logBody").innerHTML = "<table><thead><tr><th>When</th><th>Company</th><th>Role</th>" +
+    "<th>Email</th><th>Result</th></tr></thead><tbody>" +
+    rows.map((r) => "<tr><td>" + esc(r.sent_at) + "</td><td>" + esc(r.company) + "</td><td>" +
+      esc(r.role) + "</td><td>" + esc(r.email) + "</td><td>" +
+      (r.result === "sent" ? '<span class="badge ok">sent</span>'
+        : '<span class="badge no">' + esc(r.result) + "</span>") + "</td></tr>").join("") +
+    "</tbody></table>";
+}
+
+/* ---------- templates ---------- */
+function renderTplPick() {
+  const pick = $("tplPick"), current = pick.value;
+  pick.innerHTML = S.templates.map((t) => "<option>" + esc(t) + "</option>").join("");
+  if (current) pick.value = current;
+  if (!$("tplText").value) loadTpl();
+}
+async function loadTpl() {
+  const r = await api("/api/template?name=" + encodeURIComponent($("tplPick").value));
+  $("tplText").value = r.text;
+}
+$("tplPick").onchange = loadTpl;
+$("saveTpl").onclick = async () => {
+  try {
+    await api("/api/template", { name: $("tplPick").value, text: $("tplText").value });
+    toast("Template saved");
+  } catch (e) { toast(e.message); }
+};
+
+/* ---------- setup ---------- */
+function renderSetup() {
+  const c = S.config;
+  ["sender_name", "sender_email", "reply_to", "resume_path", "resume_filename",
+   "phone", "linkedin", "github", "portfolio"].forEach((k) => ($("c_" + k).value = c[k] || ""));
+  $("c_app_password").placeholder = c.has_password ? "•••••••••••••••• saved" : "not set yet";
+  $("c_app_password").value = "";
+  let note = "";
+  if (!c.has_password)
+    note += '<div class="note bad"><b>No app password yet.</b> This is the one thing blocking every ' +
+      "run. A normal Gmail password will not work — Google blocks it for SMTP.</div>";
+  if (c.resume_path && !c.resume_ok)
+    note += '<div class="note bad"><b>Resume not found</b> at ' + esc(c.resume_full) + "</div>";
+  else if (c.resume_ok)
+    note += '<div class="note"><b>Resume found.</b> ' + esc(c.resume_full) + "</div>";
+  $("setupNote").innerHTML = note;
+}
+$("saveCfg").onclick = async () => {
+  const patch = {};
+  ["sender_name", "sender_email", "reply_to", "resume_path", "resume_filename",
+   "phone", "linkedin", "github", "portfolio"].forEach((k) => (patch[k] = $("c_" + k).value));
+  const pw = $("c_app_password").value.trim();
+  if (pw) patch.app_password = pw;
+  try { await api("/api/config", patch); await refresh(); toast("Saved to config.json"); }
+  catch (e) { toast("Could not save: " + e.message); }
+};
+
+$("saveUiPw").onclick = async () => {
+  const pw = $("c_ui_password").value.trim();
+  if (pw.length < 8) return toast("At least 8 characters.");
+  try {
+    await api("/api/config", { ui_password: pw });
+    $("c_ui_password").value = ""; await refresh(); toast("Login password set");
+  } catch (e) { toast(e.message); }
+};
+$("clearUiPw").onclick = async () => {
+  if (!confirm("Remove the login password?\n\nThe page will then only open on this Mac, " +
+               "from the link in your terminal.")) return;
+  try { await api("/api/config", { ui_password_clear: true }); await refresh();
+        toast("Login password removed"); } catch (e) { toast(e.message); }
+};
+
+/* ---------- run buttons on the queue tab ---------- */
+async function fromQueue(id) {
+  if (dirty) {
+    try {
+      await api("/api/jobs", { rows: S.jobs });
+      dirty = false; $("saveJobs").textContent = "Save queue"; await refresh();
+    } catch (e) { return toast("Could not save: " + e.message); }
+  }
+  $(id).click();
+}
+$("qDry").onclick = () => fromQueue("btnDry");
+$("qTest").onclick = () => fromQueue("btnTest");
+$("qSend").onclick = () => fromQueue("btnSend");
+
+/* ---------- login ---------- */
+function showLogin() {
+  $("login").classList.add("show"); $("logout").hidden = true;
+  setTimeout(() => $("loginPw").focus(), 50);
+}
+$("loginForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  $("loginErr").textContent = "";
+  const r = await fetch("/api/login", { method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ password: $("loginPw").value }) });
+  const j = await r.json().catch(() => ({ error: "bad response" }));
+  if (j.token) {
+    TOK = j.token; sessionStorage.setItem("jm_token", TOK);
+    $("loginPw").value = ""; $("login").classList.remove("show"); $("logout").hidden = false;
+    refresh().catch((err) => toast(err.message));
+  } else { $("loginErr").textContent = j.error || "Wrong password"; }
+});
+$("logout").onclick = async () => {
+  try { await api("/api/logout", {}); } catch (e) { /* going anyway */ }
+  TOK = ""; sessionStorage.removeItem("jm_token"); showLogin();
+};
+
+/* ---------- start ---------- */
+(async function boot() {
+  if (BOOT) sessionStorage.setItem("jm_token", BOOT);
+  TOK = sessionStorage.getItem("jm_token") || "";
+  if (!TOK) return showLogin();
+  try { await refresh(); $("logout").hidden = false; }
+  catch (e) { if (e.message !== "Please log in") toast("Could not load: " + e.message); }
+})();
+</script>
+</body>
+</html>
