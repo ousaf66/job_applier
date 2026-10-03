@@ -54,8 +54,19 @@ class Abort(Exception):
 # --------------------------------------------------------------------------- #
 
 def _kv_credentials():
-    url = os.environ.get("KV_REST_API_URL") or os.environ.get("UPSTASH_REDIS_REST_URL")
-    token = os.environ.get("KV_REST_API_TOKEN") or os.environ.get("UPSTASH_REDIS_REST_TOKEN")
+    """The Upstash connection Vercel adds. It is usually KV_REST_API_URL / KV_REST_API_TOKEN, but
+    the integration lets you add a prefix (STORAGE_REST_API_URL, MYAPP_KV_REST_API_URL …), so any
+    *REST_API_URL with a matching *REST_API_TOKEN (not the read-only one) is accepted too."""
+    env = os.environ
+    url = env.get("KV_REST_API_URL") or env.get("UPSTASH_REDIS_REST_URL")
+    token = env.get("KV_REST_API_TOKEN") or env.get("UPSTASH_REDIS_REST_TOKEN")
+    if not (url and token):
+        for name in sorted(env):
+            for ending in ("REST_API_URL", "REDIS_REST_URL"):
+                if name.endswith(ending) and env[name].startswith("http"):
+                    stem = name[:-len("URL")]
+                    if env.get(stem + "TOKEN"):
+                        url, token = env[name], env[stem + "TOKEN"]
     return (url or "").rstrip("/"), token or ""
 
 
