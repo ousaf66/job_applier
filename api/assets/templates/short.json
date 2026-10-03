@@ -1,0 +1,6 @@
+{
+  "name": "Short application",
+  "subject": "Application — {{role}} at {{company}}",
+  "greeting": "Hi",
+  "html": "<p>I'm applying for the {{role}} role at {{company}}; my resume is attached.</p>\n<p>I'm an AI engineer with production experience in RAG systems, LLM fine-tuning and deployment, and MLOps — Python, PyTorch, LangChain, FastAPI, Docker and AWS. My current work is a hybrid search platform serving 1.7M+ documents with a two-stage reranked retrieval layer.</p>\n<p>Happy to share more if it's useful.</p>\n<p>Best regards,<br>{{sender_name}}<br>{{phone}} · {{sender_email}}<br>{{linkedin}}</p>"
+}

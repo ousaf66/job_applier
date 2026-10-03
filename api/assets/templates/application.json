@@ -1,0 +1,6 @@
+{
+  "name": "Full application",
+  "subject": "Application: {{role}} — {{sender_name}}",
+  "greeting": "Hi",
+  "html": "<p>I'd like to apply for the {{role}} position at {{company}}. My resume is attached.</p>\n<p>I'm an AI engineer building production LLM systems. Most recently I architected a hybrid retrieval platform over 1.7M+ legal documents — Pinecone semantic search and MongoDB keyword search behind adaptive routing, with a Cohere-reranked two-stage retrieval layer fed by an event-driven vectorization pipeline (SQS workers, OCR, semantic chunking). Before that I built a HubSpot migration platform that moves 5,000+ CRM assets per run through a parallel n8n pipeline with idempotency checks and rate-limit handling.</p>\n<p>Day to day that means Python, PyTorch, LangChain, FastAPI, Docker and AWS, on top of a CS degree from FAST-NUCES Islamabad.</p>\n<p>I'd welcome the chance to talk about how I could contribute to {{company}}.</p>\n<p>Best regards,<br>{{sender_name}}<br>{{phone}} · {{sender_email}}<br>{{linkedin}}<br>{{github}}</p>"
+}

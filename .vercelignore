@@ -5,11 +5,15 @@
 /.ui_url
 /sent_log.csv
 /previews/
+/resumes/
+/covers/
+/templates/
 /web/
 /web_ui.py
 /send_applications.py
+/cover_pdf.py
+/test_parity.py
 /jobs.csv
-/templates/
 /where_to_find_emails.md
 /README.md
 __pycache__/

@@ -19,8 +19,7 @@
 body{margin:0;background:var(--bg);color:var(--ink);
   font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
 header{padding:20px 24px 14px;border-bottom:1px solid var(--line);background:var(--card)}
-.hrow{display:flex;align-items:center;gap:12px}
-.hrow h1{flex:1;margin:0;font-size:17px;letter-spacing:-.01em}
+h1{margin:0;font-size:17px;letter-spacing:-.01em}
 h1 span{font-weight:400;color:var(--muted);font-size:12.5px;margin-left:10px;letter-spacing:0}
 .pills{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .pill{font-size:12px;padding:3px 10px;border-radius:999px;background:var(--chip);color:var(--muted)}
@@ -33,7 +32,7 @@ nav{display:flex;gap:2px;padding:0 24px;background:var(--card);border-bottom:1px
 nav button{background:none;border:0;border-bottom:2px solid transparent;padding:11px 14px;
   font:inherit;color:var(--muted);cursor:pointer;white-space:nowrap}
 nav button.on{color:var(--ink);border-bottom-color:var(--accent);font-weight:600}
-main{max-width:1120px;margin:0 auto;padding:22px 24px 80px}
+main{max-width:1320px;margin:0 auto;padding:22px 24px 80px}
 section{display:none} section.on{display:block}
 .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px;
   margin-bottom:16px;box-shadow:var(--shadow)}
@@ -46,6 +45,7 @@ input,select,textarea{font:inherit;color:var(--ink);background:var(--bg);
 input:focus,select:focus,textarea:focus{outline:2px solid color-mix(in srgb,var(--accent) 40%,transparent);
   outline-offset:-1px;border-color:var(--accent)}
 textarea{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;resize:vertical}
+code{font:12px ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--chip);padding:1px 5px;border-radius:4px}
 button.btn{font:inherit;font-weight:500;padding:8px 14px;border-radius:7px;cursor:pointer;
   border:1px solid var(--line);background:var(--card);color:var(--ink)}
 button.btn:hover{border-color:var(--muted)}
@@ -58,41 +58,46 @@ th{text-align:left;font-size:11.5px;text-transform:uppercase;letter-spacing:.04e
   color:var(--muted);font-weight:600;padding:0 6px 8px}
 td{padding:3px 6px;vertical-align:middle;border-top:1px solid var(--line)}
 td input,td select{padding:6px 8px}
-tr.detail td{background:var(--bg);padding:12px}
+.tablewrap{overflow-x:auto}
+#jobsTable{min-width:1180px}
+#jobsTable td select{font-size:12.5px;padding:6px 6px}
+#jobsTable .pickcol{width:34px;text-align:center;padding-left:2px;padding-right:2px}
+#jobsTable input[type=checkbox]{width:16px;height:16px;padding:0;margin:0;vertical-align:middle;
+  accent-color:var(--accent);cursor:pointer}
+#jobsTable input[type=checkbox]:disabled{cursor:not-allowed;opacity:.35}
+#jobsTable tr.picked td{background:color-mix(in srgb,var(--accent) 7%,transparent)}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
-@media(max-width:760px){.grid2,.grid3{grid-template-columns:1fr}}
+@media(max-width:760px){.grid2{grid-template-columns:1fr}}
 .badge{display:inline-block;font-size:11px;padding:2px 7px;border-radius:5px;white-space:nowrap}
 .badge.ok{background:color-mix(in srgb,var(--good) 14%,transparent);color:var(--good)}
 .badge.no{background:color-mix(in srgb,var(--warn) 16%,transparent);color:var(--warn)}
 .badge.sent{background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent)}
 pre{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:14px;
   font:12.5px/1.55 ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap;
-  overflow-x:auto;margin:0;min-height:90px;max-height:460px;overflow-y:auto}
-.split{display:grid;grid-template-columns:250px 1fr;gap:14px}
-@media(max-width:760px){.split{grid-template-columns:1fr}}
-.list{border:1px solid var(--line);border-radius:8px;overflow:hidden;max-height:460px;overflow-y:auto}
-.list button{display:block;width:100%;text-align:left;background:none;border:0;
-  border-bottom:1px solid var(--line);padding:9px 11px;font:inherit;color:var(--ink);cursor:pointer}
-.list button:hover{background:var(--bg)}
-.list button.on{background:color-mix(in srgb,var(--accent) 12%,transparent);color:var(--accent);font-weight:600}
+  overflow-x:auto;margin:0;min-height:60px;max-height:320px;overflow-y:auto}
 .note{border-left:3px solid var(--warn);padding:9px 12px;background:var(--bg);border-radius:0 7px 7px 0;
   font-size:12.5px;color:var(--muted);margin-bottom:14px}
 .note.bad{border-left-color:var(--bad)}
 .note b{color:var(--ink)}
-.note code{background:var(--chip);padding:1px 5px;border-radius:4px;font-size:12px}
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);
   color:var(--bg);padding:9px 18px;border-radius:8px;font-size:13px;opacity:0;
   transition:opacity .2s;pointer-events:none;z-index:20}
 .toast.show{opacity:1}
 .muted{color:var(--muted)}
 .right{margin-left:auto}
-.runbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:16px;
-  padding-top:16px;border-top:1px solid var(--line)}
-.runbar .muted{flex:1;min-width:150px;font-size:12.5px}
+.empty{padding:26px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:10px}
 .spin{display:inline-block;width:11px;height:11px;border:2px solid var(--line);
   border-top-color:var(--accent);border-radius:50%;animation:sp .7s linear infinite;vertical-align:-1px}
 @keyframes sp{to{transform:rotate(360deg)}}
+.hrow{display:flex;align-items:center;gap:12px}
+.hrow h1{flex:1}
+.pick{display:flex;align-items:center;gap:7px}
+.pick label{margin:0;white-space:nowrap}
+.pick select,.pick input{width:auto;max-width:230px;padding:6px 8px}
+.runbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:16px;
+  padding-top:16px;border-top:1px solid var(--line)}
+.runbar .muted{flex:1;min-width:150px;font-size:12.5px}
+#sendBox{margin-top:14px}
 #login{position:fixed;inset:0;background:var(--bg);display:none;align-items:center;
   justify-content:center;z-index:50;padding:24px}
 #login.show{display:flex}
@@ -102,6 +107,77 @@ pre{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:
 #login input{margin:14px 0 12px}
 #login button{width:100%}
 #loginErr{color:var(--bad);min-height:18px;margin:10px 0 0}
+.sendhead{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:13px}
+/* sent log */
+.filters{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+tr.day td{background:var(--bg);font-size:12.5px;padding:9px 8px;color:var(--muted)}
+tr.day b{color:var(--ink)}
+td.clip{max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#logBody td{padding:7px 6px}
+/* email / cover tab */
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden;flex:none}
+.seg button{border:0;background:none;font:inherit;font-size:12px;padding:5px 10px;color:var(--muted);cursor:pointer}
+.seg button.on{background:var(--chip);color:var(--ink);font-weight:600}
+.seg.big button{font-size:13px;padding:7px 20px}
+.seg.big button.on{background:var(--accent);color:#fff}
+.tcard{border:1px solid var(--line);border-radius:10px;margin-bottom:10px;background:var(--card)}
+.tcard.open{border-color:var(--ink)}
+.thead{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;min-height:56px}
+.tcard.open .thead{cursor:default}
+.thead .tname{font-weight:600;white-space:nowrap}
+.thead .tsub{color:var(--muted);font-size:12.5px;flex:1;min-width:0;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
+.inuse{background:var(--ink);color:var(--bg);font-size:11px;font-weight:600;padding:2px 9px;
+  border-radius:999px;white-space:nowrap}
+.iconbtn{background:none;border:0;padding:6px;border-radius:6px;cursor:pointer;color:var(--bad);
+  display:inline-flex}
+.iconbtn:hover{background:var(--chip)}
+.tbody{padding:4px 14px 16px}
+.tgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start;
+  margin-top:14px}
+@media(max-width:1100px){.tgrid{grid-template-columns:1fr}}
+svg.i{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;
+  stroke-linejoin:round;flex:none}
+.editor-wrap{border:1px solid var(--line);border-radius:8px}
+.toolbar{display:flex;flex-wrap:wrap;gap:1px;align-items:center;padding:5px 6px;
+  border-bottom:1px solid var(--line);background:var(--card);border-radius:8px 8px 0 0;
+  position:sticky;top:44px;z-index:3}
+.toolbar button{width:30px;height:30px;border:0;background:none;border-radius:6px;color:var(--ink);
+  cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font:15px/1 Georgia,serif;
+  padding:0}
+.toolbar button:hover{background:var(--chip)}
+.toolbar button.on{background:color-mix(in srgb,var(--accent) 16%,transparent);color:var(--accent)}
+.toolbar select{width:auto;padding:4px 6px;border-color:transparent;background:none;font-size:13px}
+.toolbar .sep{width:1px;height:18px;background:var(--line);margin:0 4px}
+.toolbar .clr{font:600 14px/1 -apple-system,sans-serif;border-bottom:3px solid #c0392b;padding:0 2px 1px}
+.toolbar input[type=color]{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.editor{min-height:360px;padding:16px 18px;background:#fff;color:#222;outline:none;
+  border-radius:0 0 8px 8px;font:14px/1.55 Arial,Helvetica,sans-serif;overflow-wrap:break-word}
+.editor>:first-child{margin-top:0}
+.editor a{color:#1a5fd6}
+.pv{border:1px solid var(--line);border-radius:8px;background:var(--card);position:sticky;top:56px}
+.pvbar{display:flex;gap:8px;align-items:center;padding:6px 8px;border-bottom:1px solid var(--line)}
+.pvbar select{width:auto;flex:1;min-width:0;padding:5px 8px;font-size:12.5px}
+.pvscroll{background:#fff;color:#222;max-height:calc(100vh - 150px);overflow:auto;border-radius:0 0 8px 8px}
+.pvhead{padding:16px 18px 12px;border-bottom:1px solid #eceff3;font-family:Arial,Helvetica,sans-serif}
+.pvhead .subj{font-size:18px;margin-bottom:10px;color:#1f1f1f}
+.pvhead .meta{font-size:12.5px;color:#5f6368;line-height:1.6}
+.pvhead .meta b{color:#1f1f1f}
+.pvframe{display:block;width:100%;border:0;background:#fff;height:240px;padding:16px 18px}
+.pvtext{white-space:pre-wrap;padding:16px 18px;margin:0;font:13px/1.55 ui-monospace,Menlo,monospace;
+  color:#222;background:#fff;border:0;border-radius:0;max-height:none}
+.attachrow{display:flex;flex-wrap:wrap;gap:8px;padding:4px 18px 18px}
+.attach{display:inline-flex;gap:8px;align-items:center;border:1px solid #dadce0;border-radius:8px;
+  padding:7px 12px;font:12.5px Arial,sans-serif;color:#1f1f1f}
+.attach .pdf{background:#d93025;color:#fff;font-size:9.5px;font-weight:700;padding:2px 4px;border-radius:3px}
+.pvproblem{margin:10px 18px 0;padding:8px 10px;border-radius:6px;background:#fdecea;color:#a12a1f;
+  font:12.5px Arial,sans-serif}
+.pagewrap{background:#e9ecf0;padding:16px}
+.pageframe{display:block;width:100%;border:0;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.18)}
+.pdfframe{display:block;width:100%;height:calc(100vh - 170px);min-height:480px;border:0}
+.pvlabel{flex:1;min-width:0;font-size:12px;color:var(--muted);padding-left:4px}
+.chip{background:var(--chip);color:var(--muted);font-size:11px;padding:2px 9px;border-radius:999px;white-space:nowrap}
+.tsub.badtext{color:var(--bad)}
 </style>
 </head>
 <body>
@@ -126,10 +202,10 @@ pre{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:
 
 <nav id="tabs">
   <button data-tab="queue" class="on">Queue</button>
-  <button data-tab="run">Run</button>
-  <button data-tab="previews">Previews</button>
+  <button data-tab="email">Email</button>
+  <button data-tab="cover">Cover letter</button>
+  <button data-tab="resume">Resume</button>
   <button data-tab="log">Sent log</button>
-  <button data-tab="templates">Email text</button>
   <button data-tab="setup">Setup</button>
 </nav>
 
@@ -138,65 +214,31 @@ pre{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:
 <section id="tab-queue" class="on">
   <div class="card">
     <h2>Your queue</h2>
-    <p class="hint">One row per application. <b>Company</b>, <b>role</b> and a valid <b>email</b> are
-      required — anything else is for your own records. Leave status blank to send it;
-      use <b>hold</b> or <b>skip</b> to park a row.</p>
+    <p class="hint">One row per application. Only a valid <b>email address</b> is required — a row with
+      no company gets your <b>without company name</b> email. Each row can pick its own email, cover letter and resume, or
+      leave <b>Default</b>. Tick the rows you want — or the box at the top for all of them — and press
+      <b>Send</b>; they turn into <b>sent</b>. <b>Hold</b> rows can't be ticked.</p>
     <div class="row" style="margin-bottom:12px">
       <button class="btn" id="addRow">+ Add company</button>
       <button class="btn primary right" id="saveJobs">Save queue</button>
     </div>
-    <table><thead><tr>
-      <th style="width:20%">Company</th><th style="width:20%">Role</th>
-      <th style="width:14%">Contact</th><th style="width:22%">Email</th>
-      <th style="width:11%">Status</th><th style="width:13%">Will send?</th><th></th>
-    </tr></thead><tbody id="jobsBody"></tbody></table>
+    <div class="tablewrap"><table id="jobsTable"><thead><tr>
+      <th class="pickcol"><input type="checkbox" id="pickAll" title="Select every row that can be sent"></th>
+      <th style="width:12%">Company</th><th style="width:12%">Role</th><th style="width:17%">Email address</th>
+      <th style="width:13%">Email</th><th style="width:13%">Cover letter</th><th style="width:11%">Resume</th>
+      <th style="width:9%">Status</th><th style="width:7%">Ready?</th><th></th>
+    </tr></thead><tbody id="jobsBody"></tbody></table></div>
     <div class="runbar">
       <span class="muted" id="qSummary"></span>
-      <button class="btn" id="qDry">Dry run</button>
-      <button class="btn" id="qTest">Send test to myself</button>
-      <button class="btn danger" id="qSend">Send for real</button>
+      <button class="btn danger" id="qSend">Send</button>
     </div>
-  </div>
-</section>
-
-<section id="tab-run">
-  <div class="card">
-    <h2>Run</h2>
-    <p class="hint">Dry-run first and read a couple of previews. Then send one test to yourself to
-      prove the login and the attachment. Only then send for real.</p>
-    <div id="runBlock"></div>
-    <div class="grid3" style="margin-bottom:14px">
-      <div><label>Email template</label><select id="tpl"></select></div>
-      <div><label>Max emails this run</label><input id="limit" type="number" min="1" value="25"></div>
-      <div><label>Seconds between sends</label><input id="delay" type="number" min="5" value="45"></div>
-    </div>
-    <div style="margin-bottom:16px">
-      <label>Only companies containing (optional)</label>
-      <input id="only" placeholder="e.g. Densight — leave blank for all">
-    </div>
-    <div class="row">
-      <button class="btn primary" id="btnDry">1 · Dry run — no email sent</button>
-      <button class="btn" id="btnTest">2 · Send one test to myself</button>
-      <button class="btn danger right" id="btnSend">3 · Send for real</button>
-    </div>
-  </div>
-  <div class="card">
-    <h2>Output <span id="runSpin"></span>
-      <button class="btn danger right" id="btnStop" hidden style="float:right;padding:4px 12px">Stop</button>
-    </h2>
-    <p class="hint" id="runMode">Nothing has run yet.</p>
-    <pre id="console">—</pre>
-  </div>
-</section>
-
-<section id="tab-previews">
-  <div class="card">
-    <h2>Previews</h2>
-    <p class="hint">Exactly what would be sent. Rendered on demand — nothing is stored and
-      nothing is sent.</p>
-    <div class="split">
-      <div class="list" id="prevList"></div>
-      <pre id="prevBody">Run a dry run to see the emails.</pre>
+    <div id="sendBox" hidden>
+      <div class="sendhead"><b id="sendTitle"></b><span id="sendSpin"></span>
+        <button class="link right" id="sendStop" hidden>stop after this email</button>
+        <button class="link" id="sendClose">close</button></div>
+      <p class="hint" id="sendKeep" hidden style="margin:0 0 8px">Keep this tab open until it finishes — the
+        emails are sent one at a time from here.</p>
+      <pre id="console"></pre>
     </div>
   </div>
 </section>
@@ -204,52 +246,65 @@ pre{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:
 <section id="tab-log">
   <div class="card">
     <h2>Sent log</h2>
-    <p class="hint">Every send is recorded. The same address and company is never mailed twice,
-      even if you duplicate a row.</p>
+    <p class="hint">Every email that went out, grouped by the day it was sent. The same address and
+      company is never mailed twice, even if you duplicate a row.</p>
+    <div class="filters">
+      <div class="seg" id="logRange">
+        <button data-r="all">All</button><button data-r="today">Today</button>
+        <button data-r="yesterday">Yesterday</button><button data-r="7">Last 7 days</button>
+        <button data-r="30">Last 30 days</button>
+      </div>
+      <div class="pick"><label for="logFrom">From</label><input type="date" id="logFrom"></div>
+      <div class="pick"><label for="logTo">To</label><input type="date" id="logTo"></div>
+      <span class="muted right" id="logCount" style="font-size:12.5px"></span>
+    </div>
     <div id="logBody"></div>
   </div>
 </section>
 
-<section id="tab-templates">
+<section id="tab-docs">
   <div class="card">
-    <h2>Email text</h2>
-    <p class="hint">The first line must stay <b>Subject: ...</b>. Placeholders like
-      <b>{{company}}</b>, <b>{{role}}</b> and <b>{{greeting_name}}</b> are filled per row —
-      a blank contact becomes "Hiring Team".</p>
-    <div class="row" style="margin-bottom:12px">
-      <div style="width:230px"><label>Template</label><select id="tplPick"></select></div>
-      <button class="btn primary right" id="saveTpl">Save template</button>
+    <div class="row" style="align-items:center">
+      <h2 style="margin:0 6px 0 0" id="docTitle">Emails</h2>
+      <div class="seg big" id="sideSeg">
+        <button data-side="company">With company name</button><button data-side="general">Without company name</button>
+      </div>
+      <button class="btn right" id="newDoc">+ New email</button>
     </div>
-    <textarea id="tplText" rows="22"></textarea>
+    <p class="hint" id="kindHint" style="margin-top:10px"></p>
+    <div id="docList"></div>
+  </div>
+</section>
+
+<section id="tab-resume">
+  <div class="card">
+    <div class="row" style="align-items:center">
+      <h2 style="margin:0">Resumes</h2>
+      <button class="btn right" id="newResume">+ Add resume</button>
+    </div>
+    <p class="hint" style="margin-top:8px">Keep a resume for each kind of role. The one marked <b>Default</b>
+      goes to every row that doesn't pick its own on the Queue tab. <span id="resumeWhere"></span></p>
+    <div id="resumeList"></div>
+    <input type="file" id="resumeFile" accept="application/pdf,.pdf" hidden>
   </div>
 </section>
 
 <section id="tab-setup">
   <div class="card">
-    <h2>Deployment</h2>
-    <p class="hint">These come from environment variables in your Vercel project settings.
-      Change them there, then redeploy — they cannot be edited from this page, which is
-      what keeps your Gmail password out of the browser.</p>
-    <div id="envBlock"></div>
-  </div>
-  <div class="card">
-    <h2>Resume</h2>
-    <p class="hint">Attached to every application. Stored in your database, not in the
-      repository, so it never ends up in git.</p>
-    <div id="resumeNote"></div>
-    <div class="row">
-      <div style="flex:1;min-width:220px">
-        <label>Choose a PDF</label><input id="resumeFile" type="file" accept="application/pdf">
-      </div>
-      <button class="btn primary" id="saveResume">Upload</button>
-    </div>
-  </div>
-  <div class="card">
-    <h2>Your details</h2>
-    <p class="hint">Used to fill the placeholders in the email and the signature.</p>
+    <h2>Setup</h2>
+    <p class="hint"><span id="setupWhere">Stored in config.json on this Mac, permissions 600, git-ignored.
+      The app password is never sent back to this page once saved.</span></p>
+    <div id="setupNote"></div>
     <div class="grid2">
       <div><label>Your name</label><input id="c_sender_name"></div>
-      <div><label>Attachment filename</label><input id="c_resume_filename"></div>
+      <div><label>Gmail address</label><input id="c_sender_email"></div>
+    </div>
+    <div style="margin-top:12px">
+      <label>Google App Password — 16 characters, not your normal password</label>
+      <input id="c_app_password" type="password" autocomplete="off">
+      <p class="hint" id="appPwHint" style="margin:6px 0 0">Get one at
+        <span class="muted">myaccount.google.com/apppasswords</span> (needs 2-Step Verification on).
+        Leave blank to keep the saved one.</p>
     </div>
     <div class="grid2" style="margin-top:12px">
       <div><label>Reply-to (optional)</label><input id="c_reply_to"></div>
@@ -261,10 +316,9 @@ pre{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:
     </div>
     <div class="grid2" style="margin-top:12px">
       <div><label>Portfolio</label><input id="c_portfolio"></div>
-      <div></div>
     </div>
     <div class="row" style="margin-top:16px">
-      <button class="btn primary right" id="saveCfg">Save details</button>
+      <button class="btn primary right" id="saveCfg">Save setup</button>
     </div>
   </div>
 </section>
@@ -273,47 +327,97 @@ pre{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:
 <div class="toast" id="toast"></div>
 
 <script>
+const BOOT = "__TOKEN__";
+// The local server swaps __TOKEN__ for a one-time token; the online page is served as is.
+const ONLINE = BOOT === "__TOKEN" + "__";
+// Online there is one function; the page names the route in the query string.
+const route = (path) => {
+  if (!ONLINE) return path;
+  const [p, q] = path.split("?");
+  return "/api/app?r=" + p.replace(/^\/api\//, "") + (q ? "&" + q : "");
+};
+let TOK = "";
 const $ = (id) => document.getElementById(id);
-let S = null, TOK = "", dirty = false, openRow = -1, stopFlag = false, lines = [];
+let S = null, dirty = false, polling = null, RUNNING = false;
+let KIND = "email";                 // which tab the editor is on: email or cover
+let SIDE = "company";               // Email tab: emails for rows with a company name, or without
+let DRAFT = null;                   // the open email or cover letter, with unsaved edits
+let pvTimer = null, pdfUrl = "", savedRange = null, LOGRANGE = "all";
+let RDRAFT = null, resumeUrl = "";  // the open resume, with unsaved edits
+const PVMODE = { email: "html", cover: "page" };
 
 async function api(path, body) {
   const opts = { headers: { "X-Token": TOK, "Content-Type": "application/json" } };
   if (body !== undefined) { opts.method = "POST"; opts.body = JSON.stringify(body); }
-  const r = await fetch(path, opts);
-  if (r.status === 403) { showLogin(); throw new Error("Please log in"); }
-  const j = await r.json().catch(() => ({ error: "the server did not answer with JSON" }));
+  const r = await fetch(route(path), opts);
+  if (r.status === 403) { denied(); throw new Error("Please log in"); }
+  const j = await r.json().catch(() => ({ error: "bad response" }));
   if (j.error) throw new Error(j.error);
   return j;
 }
+async function apiBlob(path, body) {
+  const opts = { headers: { "X-Token": TOK, "Content-Type": "application/json" } };
+  if (body !== undefined) { opts.method = "POST"; opts.body = JSON.stringify(body); }
+  const r = await fetch(route(path), opts);
+  if (r.status === 403) { denied(); throw new Error("Please log in"); }
+  if (!r.ok) { const j = await r.json().catch(() => ({})); throw new Error(j.error || "HTTP " + r.status); }
+  return r.blob();
+}
 function toast(msg) {
   const t = $("toast"); t.textContent = msg; t.classList.add("show");
-  clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove("show"), 3200);
+  clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove("show"), 2600);
 }
 const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g,
   (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const opt = (v, label, on) =>
+  '<option value="' + esc(v) + '"' + (on ? " selected" : "") + ">" + esc(label) + "</option>";
+const TZ = () => -new Date().getTimezoneOffset();     // minutes ahead of UTC, for {{date}}
+const plural = (n, word) => n + " " + word + (n === 1 ? "" : "s");
 
+const ICON = {
+  trash: '<svg class="i" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg>',
+  ul: '<svg class="i" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1"/>' +
+      '<circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/></svg>',
+  ol: '<svg class="i" viewBox="0 0 24 24"><path d="M10 6h10M10 12h10M10 18h10M4 4h1v4M4 8h2M4 14.5c0-1 2-1 2 0 0 .8-2 1.5-2 3h2"/></svg>',
+  link: '<svg class="i" viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/>' +
+        '<path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>',
+  clear: '<svg class="i" viewBox="0 0 24 24"><path d="M4 7V5h12v2M10 5 7 19M5 19h6M15 14l5 5M20 14l-5 5"/></svg>',
+};
+
+/* ---------- tabs ---------- */
 $("tabs").addEventListener("click", (e) => {
-  const b = e.target.closest("button[data-tab]"); if (b) show(b.dataset.tab);
+  const b = e.target.closest("button[data-tab]"); if (!b) return;
+  show(b.dataset.tab);
 });
 function show(name) {
+  const docs = name === "email" || name === "cover";
+  if (docs && name !== KIND) {
+    if (!leaveDraft()) return;
+    KIND = name;
+    if (S) renderDocs();
+  }
   document.querySelectorAll("nav button").forEach((b) => b.classList.toggle("on", b.dataset.tab === name));
-  document.querySelectorAll("main section").forEach((s) => s.classList.toggle("on", s.id === "tab-" + name));
+  document.querySelectorAll("main section").forEach((s) =>
+    s.classList.toggle("on", s.id === "tab-" + (docs ? "docs" : name)));
 }
 
 /* ---------- state ---------- */
 async function refresh() {
   S = await api("/api/state");
-  renderPills(); renderJobs(); renderRun(); renderLog(); renderSetup(); renderTplPick();
+  renderPills(); renderJobs(); renderSendBar(); renderLog(); renderDocs(); renderResumes(); renderSetup();
 }
 
 function renderPills() {
-  const n = S.counts, pills = [];
-  pills.push(S.ready ? '<span class="pill good">Setup complete</span>'
-    : '<span class="pill bad">Setup needed: ' + esc((S.missing || []).join(", ")) + "</span>");
+  const c = S.config, n = S.counts;
+  const pills = [];
+  pills.push(c.ready
+    ? '<span class="pill good">Setup complete</span>'
+    : '<span class="pill bad">Setup needed: ' + esc(c.missing.join(", ") || "resume file missing") + "</span>");
   pills.push('<span class="pill">Queue <b>' + n.total + "</b></span>");
   pills.push('<span class="pill' + (n.ready ? " good" : "") + '">Ready to send <b>' + n.ready + "</b></span>");
   if (n.blocked) pills.push('<span class="pill warn">Held back <b>' + n.blocked + "</b></span>");
-  pills.push('<span class="pill">Sent so far <b>' + S.sent_log.length + "</b></span>");
+  const sent = S.sent_log.filter((r) => r.result === "sent").length;
+  pills.push('<span class="pill">Sent so far <b>' + sent + "</b></span>");
   $("pills").innerHTML = pills.join("");
 }
 
@@ -321,271 +425,824 @@ function renderPills() {
 function renderJobs() {
   const body = $("jobsBody");
   if (!S.jobs.length) {
-    body.innerHTML = '<tr><td colspan="7" class="muted" style="padding:20px">No rows yet — add a company.</td></tr>';
-    return;
+    body.innerHTML = '<tr><td colspan="10" class="muted" style="padding:20px">No rows yet — add a company.</td></tr>';
+    return updatePicks();
   }
+  const pickable = new Set(S.jobs.filter(canPick).map(rowKey));
+  [...PICKED].forEach((k) => { if (!pickable.has(k)) PICKED.delete(k); });
   body.innerHTML = S.jobs.map((j, i) => {
-    const status = (j.status || "").toLowerCase();
-    let will = '<span class="badge ok">yes</span>';
-    if (status === "sent") will = '<span class="badge sent">already sent</span>';
-    else if (j._skip) will = '<span class="badge no" title="' + esc(j._skip) + '">' + esc(j._skip) + "</span>";
-    const sel = ["", "hold", "skip", "failed", "sent"].map((v) =>
-      '<option value="' + v + '"' + (status === v ? " selected" : "") + ">" + (v || "ready") + "</option>").join("");
-    let html = "<tr>" + td(i, "company") + td(i, "role") + td(i, "contact_name") + td(i, "email") +
-      '<td><select data-i="' + i + '" data-f="status">' + sel + "</select></td><td>" + will +
-      '</td><td style="text-align:right;white-space:nowrap">' +
-      '<button class="link" data-open="' + i + '">' + (openRow === i ? "hide" : "more") + "</button>" +
-      '<button class="link" data-del="' + i + '" title="delete row">&times;</button></td></tr>';
-    if (openRow === i) {
-      html += '<tr class="detail"><td colspan="7"><div class="grid3">' +
-        field(i, "source", "Source") + field(i, "location", "Location") + field(i, "job_url", "Job URL") +
-        '</div><div style="margin-top:10px"><label>Notes</label>' +
-        '<textarea rows="3" data-i="' + i + '" data-f="notes">' + esc(j.notes) + "</textarea></div>" +
-        (j.sent_at ? '<p class="hint" style="margin:8px 0 0">Last run ' + esc(j.sent_at) + "</p>" : "") +
-        "</td></tr>";
-    }
-    return html;
+    const st = statusOf(j);
+    const sel = [["", "not sent"], ["hold", "hold"], ["sent", "sent"]].map(([v, label]) => opt(v, label, st === v)).join("");
+    const can = canPick(j);
+    return "<tr>" +
+      '<td class="pickcol"><input type="checkbox" data-pick="' + i + '"' +
+        (can && PICKED.has(rowKey(j)) ? " checked" : "") + (can ? "" : " disabled") +
+        ' title="' + (can ? "Send this row" : st === "hold" ? "On hold" : st === "sent" ? "Already sent"
+          : esc(j._skip || "Needs a valid email address")) + '"></td>' +
+      td(i, "company") + td(i, "role") + td(i, "email") +
+      pickCell(i, "template", j) + pickCell(i, "cover", j) + pickCell(i, "resume", j) +
+      '<td><select data-i="' + i + '" data-f="status">' + sel + "</select></td>" +
+      '<td data-ready="' + i + '" title="' + esc(j.sent_at ? "Sent " + j.sent_at : "") + '">' + readyBadge(j) + "</td>" +
+      '<td style="text-align:right"><button class="link" data-del="' + i + '" title="Delete row">&times;</button></td></tr>';
   }).join("");
+  updatePicks();
+}
+// Ticked rows are kept by email + company, the same pair the sent log uses, so a tick
+// survives saving the queue and reloading it.
+const PICKED = new Set();
+const EMAIL_OK = /^[^@\s]+@[^@\s]+\.[a-zA-Z]{2,}$/;
+const rowKey = (j) => (j.email || "").trim().toLowerCase() + "\n" + (j.company || "").trim().toLowerCase();
+// Tickable: status "not sent" and a valid address. Address problems are re-checked here as you
+// type; anything else the server found (already mailed, missing resume) blocks the tick.
+function canPick(j) {
+  const why = j._skip || "";
+  return statusOf(j) === "" && EMAIL_OK.test((j.email || "").trim()) &&
+    (!why || why === "no email address" || why.startsWith("malformed"));
+}
+function updatePicks() {
+  const rows = S.jobs.filter(canPick), n = rows.filter((j) => PICKED.has(rowKey(j))).length;
+  $("pickAll").checked = rows.length > 0 && n === rows.length;
+  $("pickAll").indeterminate = n > 0 && n < rows.length;
+  $("pickAll").disabled = !rows.length;
+  document.querySelectorAll("#jobsBody [data-pick]").forEach((cb) => cb.closest("tr").classList.toggle("picked", cb.checked));
+  renderSendBar();
+}
+function readyBadge(j) {
+  const st = statusOf(j);
+  if (st === "sent") return '<span class="badge sent">sent</span>';
+  if (st === "hold") return '<span class="badge no">no</span>';
+  if (canPick(j)) return '<span class="badge ok">yes</span>';
+  const why = EMAIL_OK.test((j.email || "").trim()) ? j._skip
+    : (j.email || "").trim() ? "malformed email" : "no email address";
+  return '<span class="badge no" title="' + esc(why) + '">' + esc(shortReason(why)) + "</span>";
+}
+function syncPick(i) {
+  const j = S.jobs[i], cb = document.querySelector('#jobsBody [data-pick="' + i + '"]');
+  if (!canPick(j)) PICKED.delete(rowKey(j));
+  if (cb) { cb.disabled = !canPick(j); cb.checked = PICKED.has(rowKey(j)); }
+  const cell = document.querySelector('#jobsBody [data-ready="' + i + '"]');
+  if (cell) cell.innerHTML = readyBadge(j);
+  updatePicks();
 }
 const td = (i, f) => '<td><input data-i="' + i + '" data-f="' + f + '" value="' + esc(S.jobs[i][f]) + '"></td>';
-const field = (i, f, label) => "<div><label>" + label + '</label><input data-i="' + i + '" data-f="' + f +
-  '" value="' + esc(S.jobs[i][f]) + '"></div>';
+// "" = not sent (goes out on Send), hold = never sent, sent = done. Older skip/no rows count as hold.
+function statusOf(j) {
+  const s = (j.status || "").trim().toLowerCase();
+  return s === "sent" ? "sent" : ["hold", "skip", "no"].includes(s) ? "hold" : "";
+}
+const shortReason = (r) => ({ "no email address": "no email", "already in sent_log.csv": "already sent" })[r] ||
+  (r.startsWith("malformed") ? "bad email" : r);
+// rows with a company get that kind's default email, rows without one the other kind's
+const defaultTpl = (j) => ((j.company || "").trim()
+  ? S.active_template || S.active_general_template : S.active_general_template || S.active_template);
+const nameOf = (list, id) => (list.find((x) => x.id === id) || {}).name;
+function pickNames(j) {
+  const cover = j.cover === "none" ? "" : j.cover || S.active_cover;
+  return [nameOf(S.templates, j.template || defaultTpl(j)) || "?",
+          cover ? nameOf(S.covers, cover) || "?" : "no cover letter",
+          nameOf(S.resumes, j.resume || S.active_resume) || "?"];
+}
+function pickCell(i, f, j) {
+  const v = j[f] || "";
+  const [list, def] = f === "template" ? [S.templates, nameOf(S.templates, defaultTpl(j)) || "none"]
+    : f === "cover" ? [S.covers, nameOf(S.covers, S.active_cover) || "no cover"]
+    : [S.resumes, nameOf(S.resumes, S.active_resume) || "none"];
+  const opts = (xs) => xs.map((x) => opt(x.id, x.name, x.id === v)).join("");
+  const group = (label, xs) => (xs.length ? '<optgroup label="' + label + '">' + opts(xs) + "</optgroup>" : "");
+  let o = opt("", "Default · " + def, !v) + (f === "cover" ? opt("none", "No cover letter", v === "none") : "") +
+    (f === "template" ? group("With company name", list.filter((t) => !t.no_company)) +
+                        group("Without company name", list.filter((t) => t.no_company)) : opts(list));
+  if (v && v !== "none" && !list.some((x) => x.id === v)) o += opt(v, v + " (missing)", true);
+  return '<td><select data-i="' + i + '" data-f="' + f + '">' + o + "</select></td>";
+}
 
 $("jobsBody").addEventListener("input", (e) => {
   const el = e.target; if (!el.dataset.f) return;
-  S.jobs[+el.dataset.i][el.dataset.f] = el.value;
+  const j = S.jobs[+el.dataset.i], before = rowKey(j);
+  j[el.dataset.f] = el.value;
+  if (PICKED.has(before) && rowKey(j) !== before) { PICKED.delete(before); PICKED.add(rowKey(j)); }
   dirty = true; $("saveJobs").textContent = "Save queue •";
+  if (["email", "company", "status"].includes(el.dataset.f)) syncPick(+el.dataset.i);
+});
+$("jobsBody").addEventListener("change", (e) => {
+  const cb = e.target.closest("[data-pick]"); if (!cb) return;
+  const k = rowKey(S.jobs[+cb.dataset.pick]);
+  if (cb.checked) PICKED.add(k); else PICKED.delete(k);
+  document.querySelectorAll("#jobsBody [data-pick]").forEach((x) => {   // duplicate rows tick together
+    if (rowKey(S.jobs[+x.dataset.pick]) === k) x.checked = cb.checked;
+  });
+  updatePicks();
+});
+$("pickAll").addEventListener("change", (e) => {
+  if (e.target.checked) S.jobs.filter(canPick).forEach((j) => PICKED.add(rowKey(j)));
+  else PICKED.clear();
+  renderJobs();
 });
 $("jobsBody").addEventListener("click", (e) => {
-  const o = e.target.closest("[data-open]"), d = e.target.closest("[data-del]");
-  if (o) { openRow = openRow === +o.dataset.open ? -1 : +o.dataset.open; renderJobs(); }
-  if (d) {
-    const i = +d.dataset.del;
-    if (confirm("Delete " + (S.jobs[i].company || "this row") + " from the queue?")) {
-      S.jobs.splice(i, 1); openRow = -1; dirty = true; renderJobs();
-    }
+  const d = e.target.closest("[data-del]");
+  if (!d) return;
+  const i = +d.dataset.del;
+  if (confirm("Delete " + (S.jobs[i].company || S.jobs[i].email || "this row") + " from the queue?")) {
+    S.jobs.splice(i, 1); dirty = true; renderJobs(); renderSendBar();
+    $("saveJobs").textContent = "Save queue •";
   }
 });
 $("addRow").onclick = () => {
-  S.jobs.push({ company: "", role: "", contact_name: "", email: "", source: "", job_url: "",
-                location: "", notes: "", status: "", sent_at: "", _skip: "no email address" });
-  openRow = S.jobs.length - 1; dirty = true; renderJobs();
+  const blank = {}; S.header.forEach((h) => (blank[h] = "")); blank._skip = "no email address";
+  S.jobs.push(blank); dirty = true; renderJobs(); renderSendBar();
+  $("saveJobs").textContent = "Save queue •";
+  document.querySelector("#jobsBody tr:last-child input").focus();
 };
-async function saveQueue() {
-  const r = await api("/api/jobs", { rows: S.jobs });
-  dirty = false; $("saveJobs").textContent = "Save queue";
-  await refresh(); return r.saved;
-}
-$("saveJobs").onclick = async () => {
-  try { toast((await saveQueue()) + " rows saved"); } catch (e) { toast("Could not save: " + e.message); }
-};
-window.addEventListener("beforeunload", (e) => { if (dirty) { e.preventDefault(); e.returnValue = ""; } });
-
-/* ---------- run ---------- */
-function renderRun() {
-  const keep = $("tpl").value;
-  $("tpl").innerHTML = S.templates.map((t) => "<option>" + esc(t) + "</option>").join("");
-  if (keep) $("tpl").value = keep;
-  const ok = S.ready;
-  ["btnDry", "btnTest", "btnSend", "qDry", "qTest", "qSend"].forEach((b) => ($(b).disabled = !ok));
-  $("qSummary").textContent = ok ? S.counts.ready + " ready to send · " + S.counts.blocked + " held back"
-                                 : "Finish Setup before you can run anything.";
-  $("runBlock").innerHTML = ok ? "" :
-    '<div class="note bad"><b>Not ready yet.</b> Missing: ' + esc((S.missing || []).join(", ")) +
-    " — see the Setup tab.</div>";
-}
-const params = () => ({ template: $("tpl").value, limit: +$("limit").value,
-                        only: $("only").value, tz: -new Date().getTimezoneOffset() });
-function logLine(text) { lines.push(text); $("console").textContent = lines.join("\n");
-                         $("console").scrollTop = $("console").scrollHeight; }
-function startRun(mode) { lines = []; stopFlag = false; show("run");
-                          $("runMode").textContent = mode; $("console").textContent = "…"; }
-
-$("btnDry").onclick = async () => {
-  startRun("dry run"); logLine("Rendering...");
+async function saveQueue(quiet) {
   try {
-    const r = await api("/api/preview", params());
-    S.previewItems = r.items;
-    lines = [r.count + " email" + (r.count === 1 ? "" : "s") + " ready. Nothing was sent."];
-    r.items.forEach((it) => logLine("  " + it.company + "  ->  " + it.to));
-    if (r.skipped.length) { logLine(""); logLine("Held back:");
-      r.skipped.forEach(([c, why]) => logLine("  " + c + " — " + why)); }
-    $("runMode").textContent = "dry run — finished";
-    renderPreviews(); if (r.count) show("previews");
-  } catch (e) { logLine("ERROR: " + e.message); $("runMode").textContent = "dry run — failed"; }
-};
-
-$("btnTest").onclick = async () => {
-  startRun("test email"); logLine("Sending one email to you...");
-  try {
-    const r = await api("/api/send", { ...params(), test: true });
-    logLine("Sent to " + r.to + ". Check your inbox and open the attachment.");
-  } catch (e) { logLine("ERROR: " + e.message); }
-  $("runMode").textContent = "test email — finished";
-};
-
-$("btnSend").onclick = async () => {
-  const n = Math.min(S.counts.ready, +$("limit").value), only = $("only").value.trim();
-  if (!n) return toast("Nothing is ready to send.");
-  if (!confirm("Send " + n + " real email" + (n === 1 ? "" : "s") +
-      (only ? ' (only companies matching "' + only + '")' : "") + ", " + $("delay").value +
-      " seconds apart?\n\nKeep this tab open until it finishes.\n\nThis cannot be undone.")) return;
-  await runBatch();
-};
-
-async function runBatch() {
-  const limit = +$("limit").value, delay = Math.max(5, +$("delay").value);
-  startRun("sending"); $("btnStop").hidden = false; $("runSpin").innerHTML = '<span class="spin"></span>';
-  logLine("Sending up to " + limit + ", " + delay + "s apart. Keep this tab open.");
-  for (let i = 0; i < limit; i++) {
-    if (stopFlag) { logLine("Stopped."); break; }
-    let r;
-    try { r = await api("/api/send", params()); }
-    catch (e) { logLine("ERROR: " + e.message); break; }
-    if (!r.company) { logLine("Nothing left to send."); break; }
-    logLine((r.ok ? "  sent    " : "  FAILED  ") + r.company + " <" + r.to + ">" +
-            (r.ok ? "" : " — " + r.result));
-    if (r.done) { logLine("All done."); break; }
-    if (i === limit - 1) { logLine("Reached the limit of " + limit + "."); break; }
-    await countdown(delay);
+    const r = await api("/api/jobs", { rows: S.jobs });
+    dirty = false; $("saveJobs").textContent = "Save queue";
+    await refresh();
+    if (!quiet) toast(r.saved + " rows saved to jobs.csv");
+    return true;
+  } catch (e) { toast("Could not save: " + e.message); return false; }
+}
+$("saveJobs").onclick = () => saveQueue(false);
+window.addEventListener("beforeunload", (e) => {
+  if (dirty || (DRAFT && DRAFT.dirty) || (RDRAFT && RDRAFT.dirty) || (ONLINE && RUNNING)) {
+    e.preventDefault(); e.returnValue = "";
   }
-  $("btnStop").hidden = true; $("runSpin").innerHTML = "";
-  $("runMode").textContent = "finished";
-  await refresh();
-}
-async function countdown(seconds) {
-  for (let s = seconds; s > 0; s--) {
-    if (stopFlag) return;
-    $("runMode").textContent = "waiting " + s + "s before the next email — keep this tab open";
-    await new Promise((r) => setTimeout(r, 1000));
-  }
-}
-$("btnStop").onclick = () => { stopFlag = true; $("btnStop").hidden = true; };
-
-async function fromQueue(id) {
-  if (dirty) { try { await saveQueue(); } catch (e) { return toast("Could not save: " + e.message); } }
-  $(id).click();
-}
-$("qDry").onclick = () => fromQueue("btnDry");
-$("qTest").onclick = () => fromQueue("btnTest");
-$("qSend").onclick = () => fromQueue("btnSend");
-
-/* ---------- previews ---------- */
-function renderPreviews() {
-  const items = (S && S.previewItems) || [];
-  $("prevList").innerHTML = items.length
-    ? items.map((it, i) => '<button data-p="' + i + '">' + esc(it.company || it.to) + "</button>").join("")
-    : '<div class="muted" style="padding:14px">No previews yet.</div>';
-  if (items.length) showPreview(0);
-}
-function showPreview(i) {
-  const it = S.previewItems[i];
-  document.querySelectorAll("#prevList button").forEach((b, j) => b.classList.toggle("on", i === j));
-  $("prevBody").textContent =
-    "To:      " + it.to + "\nSubject: " + it.subject + "\nAttach:  " + it.attachment +
-    "\n" + "-".repeat(70) + "\n" + it.body;
-}
-$("prevList").addEventListener("click", (e) => {
-  const b = e.target.closest("[data-p]"); if (b) showPreview(+b.dataset.p);
 });
 
-/* ---------- sent log ---------- */
-function renderLog() {
-  if (!S.sent_log.length) {
-    $("logBody").innerHTML = '<p class="muted">Nothing has been sent yet.</p>'; return;
+/* ---------- send ---------- */
+function renderSendBar() {
+  const c = S.config, count = (fn) => S.jobs.filter(fn).length;
+  const ready = count(canPick), hold = count((j) => statusOf(j) === "hold");
+  const sent = count((j) => statusOf(j) === "sent"), broken = S.jobs.length - ready - hold - sent;
+  const n = PICKED.size;
+  $("qSend").textContent = n ? "Send " + n + " selected" : "Send";
+  $("qSend").disabled = !c.ready || RUNNING || !n;
+  $("qSummary").innerHTML = c.ready
+    ? (n ? "<b>" + n + " selected</b> · " : "Tick the rows to send · ") +
+      ready + " can be sent · " + hold + " on hold · " + sent + " sent" +
+      (broken ? ' · <span style="color:var(--bad)">' + broken + " need fixing</span>" : "")
+    : '<span style="color:var(--bad)">Before you can send: ' + esc(c.missing.join(", ")) + ".</span>";
+}
+$("qSend").onclick = async () => {
+  if (dirty && !(await saveQueue(true))) return;
+  const once = new Set();
+  const picked = S.jobs.filter((j) => canPick(j) && PICKED.has(rowKey(j)) && !once.has(rowKey(j)) && once.add(rowKey(j)));
+  if (!picked.length) return toast("Tick at least one row to send.");
+  const go = picked.slice(0, S.defaults.limit);
+  const msg = "Send " + plural(go.length, "email") + " now?\n\n" +
+    go.slice(0, 10).map((j) => "  • " + ((j.company || "").trim() || "(no company)") + "  <" + j.email + ">\n" +
+      "      " + pickNames(j).join(" · ")).join("\n") +
+    (go.length > 10 ? "\n  … and " + (go.length - 10) + " more" : "") +
+    (go.length > 1 ? "\n\nOne every " + S.defaults.delay + " seconds." : "") +
+    (ONLINE && go.length > 1 ? " Keep this tab open until it finishes." : "") +
+    (picked.length > go.length ? "\n\nOnly " + go.length + " go out at a time; the other " +
+      (picked.length - go.length) + " stay ticked for the next send." : "") +
+    "\n\nThis cannot be undone.";
+  if (!confirm(msg)) return;
+  if (ONLINE) return sendOnline(go);
+  try {
+    await api("/api/send", { rows: go.map((j) => [j.email, j.company || ""]) });
+    watchSend();
+  } catch (e) { toast(e.message); }
+};
+// Online: one email per request (a serverless function cannot sleep between sends), and this
+// page does the waiting.
+let STOPPING = false;
+const sleep = (ms) => new Promise((ok) => setTimeout(ok, ms));
+async function sendOnline(go) {
+  const lines = [], show = (t) => { $("console").textContent = lines.concat(t ? [t] : []).join("\n");
+    $("console").scrollTop = $("console").scrollHeight; };
+  $("sendBox").hidden = false; $("sendKeep").hidden = $("sendStop").hidden = false;
+  $("sendSpin").innerHTML = '<span class="spin"></span>';
+  RUNNING = true; STOPPING = false; renderSendBar();
+  let sent = 0, error = "";
+  for (let k = 0; k < go.length && !STOPPING; k++) {
+    const j = go[k], name = ((j.company || "").trim() || j.email);
+    $("sendTitle").textContent = "Sending " + (k + 1) + " of " + go.length + "…";
+    show("[" + (k + 1) + "/" + go.length + "] sending to " + name + " <" + j.email + ">…");
+    try {
+      const r = await api("/api/send", { email: j.email, company: j.company || "", tz: TZ() });
+      sent++; lines.push("[" + (k + 1) + "/" + go.length + "] sent    " + name + " <" + j.email + ">  (" +
+        (r.attachments || []).join(" + ") + ")");
+    } catch (e) {
+      error = e.message; lines.push("[" + (k + 1) + "/" + go.length + "] FAILED  " + name + " — " + e.message);
+      break;
+    }
+    PICKED.delete(rowKey(j));
+    try { await refresh(); } catch (e) { /* the next send re-checks everything anyway */ }
+    if (k < go.length - 1 && !STOPPING) {
+      for (let left = S.defaults.delay; left > 0 && !STOPPING; left--) {
+        show("waiting " + left + "s before the next email…"); await sleep(1000);
+      }
+    }
   }
-  $("logBody").innerHTML = "<table><thead><tr><th>When</th><th>Company</th><th>Role</th>" +
-    "<th>Email</th><th>Result</th></tr></thead><tbody>" +
-    S.sent_log.slice().reverse().map((r) => "<tr><td>" + esc(r.sent_at) + "</td><td>" +
-      esc(r.company) + "</td><td>" + esc(r.role) + "</td><td>" + esc(r.email) + "</td><td>" +
+  lines.push(error ? "Stopped: " + error : STOPPING ? "Stopped after " + sent + " — the rest are still ticked."
+    : "Done. " + sent + " of " + go.length + " sent.");
+  show("");
+  RUNNING = false; $("sendSpin").innerHTML = ""; $("sendStop").hidden = true;
+  $("sendTitle").textContent = error ? "Stopped: " + error : STOPPING ? "Stopped" : "Finished";
+  $("sendTitle").style.color = error ? "var(--bad)" : "";
+  try { await refresh(); } catch (e) { /* shown by api() */ }
+}
+$("sendStop").onclick = () => { STOPPING = true; $("sendStop").textContent = "stopping…"; };
+function watchSend() {
+  $("sendBox").hidden = false; RUNNING = true; renderSendBar();
+  clearInterval(polling);
+  const tick = async () => {
+    let r;
+    try { r = await api("/api/run"); } catch (e) { return; }
+    $("console").textContent = r.lines.join("\n") || "Connecting to Gmail…";
+    $("console").scrollTop = $("console").scrollHeight;
+    $("sendSpin").innerHTML = r.active ? '<span class="spin"></span>' : "";
+    $("sendTitle").textContent = r.active ? "Sending…" : r.error ? "Stopped: " + r.error : "Finished at " + r.finished;
+    $("sendTitle").style.color = !r.active && r.error ? "var(--bad)" : "";
+    if (!r.active) { clearInterval(polling); RUNNING = false; await refresh(); }
+  };
+  tick(); polling = setInterval(tick, 1000);
+}
+$("sendClose").onclick = () => { if (!RUNNING) { $("sendBox").hidden = true; $("sendStop").textContent = "stop after this email"; } };
+
+/* ---------- sent log ---------- */
+const ymd = (d) => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" +
+  String(d.getDate()).padStart(2, "0");
+function daysAgo(n) { const d = new Date(); d.setDate(d.getDate() - n); return ymd(d); }
+function rangeDates(r) {
+  if (r === "today") return [daysAgo(0), daysAgo(0)];
+  if (r === "yesterday") return [daysAgo(1), daysAgo(1)];
+  if (r === "7") return [daysAgo(6), daysAgo(0)];
+  if (r === "30") return [daysAgo(29), daysAgo(0)];
+  return ["", ""];
+}
+function dayLabel(d) {
+  const nice = new Date(d + "T00:00").toLocaleDateString(undefined,
+    { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+  return d === daysAgo(0) ? "Today · " + nice : d === daysAgo(1) ? "Yesterday · " + nice : nice;
+}
+$("logRange").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-r]"); if (!b) return;
+  LOGRANGE = b.dataset.r;
+  [$("logFrom").value, $("logTo").value] = rangeDates(LOGRANGE);
+  renderLog();
+});
+["logFrom", "logTo"].forEach((id) => $(id).addEventListener("change", () => { LOGRANGE = "custom"; renderLog(); }));
+
+function renderLog() {
+  document.querySelectorAll("#logRange button").forEach((b) => b.classList.toggle("on", b.dataset.r === LOGRANGE));
+  if (!S.sent_log.length) {
+    $("logCount").textContent = "";
+    $("logBody").innerHTML = '<div class="empty">Nothing has been sent yet. Emails show up here, ' +
+      "grouped by day, as soon as they go out.</div>";
+    return;
+  }
+  const from = $("logFrom").value, to = $("logTo").value;
+  const rows = S.sent_log.filter((r) => {
+    const d = (r.sent_at || "").slice(0, 10);
+    return (!from || d >= from) && (!to || d <= to);
+  }).sort((a, b) => (b.sent_at || "").localeCompare(a.sent_at || ""));
+  const ok = rows.filter((r) => r.result === "sent").length;
+  $("logCount").textContent = ok + " sent" + (rows.length > ok ? " · " + (rows.length - ok) + " failed" : "") +
+    (from || to ? " in this range" : " in total");
+  if (!rows.length) {
+    $("logBody").innerHTML = '<div class="empty">Nothing was sent ' +
+      (from === to ? "on " + dayLabel(from) : "between " + (from || "the start") + " and " + (to || "today")) + ".</div>";
+    return;
+  }
+  const days = new Map();
+  rows.forEach((r) => {
+    const d = (r.sent_at || "").slice(0, 10);
+    if (!days.has(d)) days.set(d, []);
+    days.get(d).push(r);
+  });
+  let html = '<table><thead><tr><th style="width:8%">Time</th><th>Company</th><th>Role</th>' +
+    "<th>Email</th><th>Subject</th><th>Result</th></tr></thead><tbody>";
+  days.forEach((list, d) => {
+    const good = list.filter((r) => r.result === "sent").length;
+    html += '<tr class="day"><td colspan="6"><b>' + esc(dayLabel(d)) + "</b> — " + good + " sent" +
+      (list.length > good ? " · " + (list.length - good) + " failed" : "") + "</td></tr>";
+    html += list.map((r) => "<tr><td>" + esc((r.sent_at || "").slice(11, 16)) + "</td><td>" + esc(r.company) +
+      "</td><td>" + esc(r.role) + "</td><td>" + esc(r.email) + '</td><td class="clip" title="' +
+      esc(r.subject) + '">' + esc(r.subject) + "</td><td>" +
       (r.result === "sent" ? '<span class="badge ok">sent</span>'
-        : '<span class="badge no">' + esc(r.result) + "</span>") + "</td></tr>").join("") +
-    "</tbody></table>";
+        : '<span class="badge no" title="' + esc(r.result) + '">failed</span>') + "</td></tr>").join("");
+  });
+  $("logBody").innerHTML = html + "</tbody></table>";
 }
 
-/* ---------- templates ---------- */
-function renderTplPick() {
-  const pick = $("tplPick"), keep = pick.value;
-  pick.innerHTML = S.templates.map((t) => "<option>" + esc(t) + "</option>").join("");
-  if (keep) pick.value = keep;
-  if (!$("tplText").value) loadTpl();
-}
-async function loadTpl() {
-  try { $("tplText").value = (await api("/api/template?name=" +
-        encodeURIComponent($("tplPick").value))).text; }
-  catch (e) { toast(e.message); }
-}
-$("tplPick").onchange = loadTpl;
-$("saveTpl").onclick = async () => {
-  try { await api("/api/template", { name: $("tplPick").value, text: $("tplText").value });
-        toast("Template saved"); } catch (e) { toast(e.message); }
+/* ---------- email / cover ---------- */
+const STARTER = {
+  email: { name: "New email", subject: "Application: {{role}} — {{sender_name}}", greeting: "Hi",
+    html: "<p>I'd like to apply for the {{role}} position at {{company}}. My resume is attached.</p>" +
+          "<p>Best regards,<br>{{sender_name}}<br>{{phone}} · {{sender_email}}</p>" },
+  general: { name: "New email (no company)", subject: "Job application — {{sender_name}}", greeting: "Hi",
+    html: "<p>I'd like to be considered for any open roles on your team. My resume is attached.</p>" +
+          "<p>Best regards,<br>{{sender_name}}<br>{{phone}} · {{sender_email}}</p>" },
+  cover: { name: "New cover letter",
+    html: "<h2>{{sender_name}}</h2><p>{{phone}} · {{sender_email}}</p><p>{{date}}</p>" +
+          "<p>{{greeting_name}}<br>{{company}}</p><p>Dear {{greeting_name}},</p>" +
+          "<p>I am writing to apply for the {{role}} position at {{company}}.</p>" +
+          "<p>Sincerely,<br>{{sender_name}}</p>" },
 };
+const PAGE_CSS = "<!doctype html><meta charset=utf-8><style>" +
+  "html{background:#fff}body{margin:0;padding:10.75vw;min-height:141.42vw;box-sizing:border-box;" +
+  "font:calc(100vw*11/595)/1.42 Helvetica,Arial,sans-serif;color:#222}" +
+  "p,div{margin:0 0 calc(100vw*7/595)}h1,h2,h3{margin:calc(100vw*6/595) 0 calc(100vw*4/595)}" +
+  "h1:first-child,h2:first-child,h3:first-child{margin-top:0}" +
+  "h1{font-size:calc(100vw*20/595)}h2{font-size:calc(100vw*17/595)}h3{font-size:calc(100vw*13/595)}" +
+  "ul,ol{margin:0 0 calc(100vw*7/595);padding-left:calc(100vw*18/595)}li{margin:0 0 calc(100vw*2.5/595)}" +
+  "a{color:#1a5fd6;text-decoration:none}</style>";
+
+const docItems = () => (KIND === "email"
+  ? S.templates.filter((t) => !!t.no_company === (SIDE === "general")) : S.covers);
+const activeId = () => (KIND === "email"
+  ? (SIDE === "general" ? S.active_general_template : S.active_template) : S.active_cover);
+const docApi = (kind) => (kind === "email" ? "/api/template" : "/api/cover");
+
+function renderDocs() {
+  const email = KIND === "email";
+  $("docTitle").textContent = email ? "Emails" : "Cover letters";
+  $("sideSeg").hidden = !email;
+  document.querySelectorAll("#sideSeg button").forEach((b) => b.classList.toggle("on", b.dataset.side === SIDE));
+  $("newDoc").textContent = email ? "+ New email" : "+ New cover letter";
+  $("kindHint").innerHTML = !email
+    ? "Cover letters are filled in for each row and attached as a PDF next to the resume. The one marked " +
+      "<b>Default</b> goes with every row that doesn't pick its own on the Queue tab. The preview is " +
+      "general: <code>[Company]</code> and <code>[Role]</code> are filled in for each row when it is sent."
+    : SIDE === "company"
+    ? "Sent to rows that <b>have a company name</b>. The one marked <b>Default</b> goes to each of them " +
+      "unless the row picks its own on the Queue tab. In the preview, <code>[Company]</code> and " +
+      "<code>[Role]</code> are filled in from each row when it is sent."
+    : "Sent to rows with <b>no company name</b>, so write these without naming a company. The one marked " +
+      "<b>Default</b> goes to each of them unless the row picks its own on the Queue tab. If you do use " +
+      "<code>{{company}}</code> here, it becomes “your company”.";
+  const d = DRAFT && DRAFT.kind === KIND &&
+    (!email || !!DRAFT.no_company === (SIDE === "general")) ? DRAFT : null, active = activeId();
+  let html = d && !d.id ? card(d, null, false) : "";
+  html += docItems().map((it) => card(d && d.id === it.id ? d : null, it, it.id === active)).join("");
+  $("docList").innerHTML = html || '<div class="empty">' + (email ? "No emails here yet. Press <b>+ New email</b>" +
+    " to write one" + (SIDE === "general" ? " — until then, rows with no company get your default email." : ".")
+    : "No cover letters yet. Press <b>+ New cover letter</b> to write one.") + "</div>";
+  if (d) schedulePreview(0);
+}
+function card(open, it, inUse) {
+  const email = KIND === "email", id = it ? it.id : "";
+  const name = open ? open.name : it.name;
+  const sub = email ? (open ? open.subject : it.subject)
+    : it ? it.words + " words · attached as a PDF" : "not saved yet";
+  let h = '<div class="tcard' + (open ? " open" : "") + '"><div class="thead"' +
+    (open ? "" : ' data-open="' + esc(id) + '"') + ">" +
+    '<span class="tname">' + esc(name || "Untitled") + '</span><span class="tsub">' + esc(sub) + "</span>" +
+    (inUse ? '<span class="inuse">Default</span>' : "") +
+    (it ? '<button class="iconbtn" data-del="' + esc(id) + '" title="Delete">' + ICON.trash + "</button>" : "") +
+    "</div>";
+  if (open) h += docBody(open, inUse);
+  return h + "</div>";
+}
+function docBody(d, inUse) {
+  const email = d.kind === "email";
+  const name = '<div><label>Name — only you see this</label><input data-d="name" value="' + esc(d.name) + '"></div>';
+  const fields = email
+    ? '<div class="grid2">' + name + '<div><label>Subject</label><input data-d="subject" value="' +
+      esc(d.subject) + '"></div></div><div class="grid2" style="margin-top:12px"><div><label>Greeting</label>' +
+      '<input data-d="greeting" value="' + esc(d.greeting) + '" placeholder="e.g. Hi"></div>' +
+      '<p class="hint" style="align-self:end;margin:0 0 9px">Becomes “Hi Hiring Team,”. ' +
+      "Leave blank to write your own opening.</p></div>"
+    : '<div style="max-width:420px">' + name + "</div>";
+  const modes = email ? [["html", "Email"], ["text", "Plain text"]] : [["page", "Page"], ["pdf", "PDF"]];
+  const seg = '<div class="seg" id="pvMode">' + modes.map(([m, label]) => '<button data-m="' + m + '"' +
+    (PVMODE[d.kind] === m ? ' class="on"' : "") + ">" + label + "</button>").join("") + "</div>";
+  const use = !d.id ? "" : inUse
+    ? (email ? "" : '<button class="btn right" data-act="unuse">No default cover</button>')
+    : '<button class="btn right" data-act="use">Make default</button>';
+  return '<div class="tbody">' + fields +
+    '<div class="tgrid"><div class="editor-wrap">' + toolbar() +
+    '<div class="editor" id="ed" contenteditable="true">' + d.html + "</div></div>" +
+    '<div class="pv"><div class="pvbar"><span class="pvlabel">General preview</span>' + seg +
+    '</div><div class="pvscroll" id="pvOut"></div></div></div>' +
+    '<div class="row" style="margin-top:14px;align-items:center"><button class="btn" data-act="close">Close</button>' +
+    (use || '<span class="right"></span>') +
+    '<button class="btn primary" data-act="save" id="saveDoc">' + (d.dirty ? "Save •" : "Save") + "</button>" +
+    "</div></div>";
+}
+function toolbar() {
+  return '<div class="toolbar">' +
+    '<select data-cmd="block" title="Text style"><option value="p">Paragraph</option>' +
+    '<option value="h2">Heading</option><option value="h3">Subheading</option></select><span class="sep"></span>' +
+    '<button data-cmd="bold" title="Bold (⌘B)"><b>B</b></button>' +
+    '<button data-cmd="italic" title="Italic (⌘I)"><i>I</i></button>' +
+    '<button data-cmd="underline" title="Underline (⌘U)"><u>U</u></button>' +
+    '<button data-cmd="color" title="Text colour"><span class="clr" id="clrMark">A</span></button>' +
+    '<input type="color" id="clrPick" value="#c0392b"><span class="sep"></span>' +
+    '<button data-cmd="insertUnorderedList" title="Bullet list">' + ICON.ul + "</button>" +
+    '<button data-cmd="insertOrderedList" title="Numbered list">' + ICON.ol + '</button><span class="sep"></span>' +
+    '<button data-cmd="link" title="Link">' + ICON.link + "</button>" +
+    '<button data-cmd="removeFormat" title="Clear formatting">' + ICON.clear + '</button><span class="sep"></span>' +
+    '<select data-cmd="field" title="Insert a field that is filled in for each company">' +
+    '<option value="">Insert field…</option>' + S.placeholders.map((p) => opt(p, "{{" + p + "}}")).join("") +
+    "</select></div>";
+}
+
+/* editing */
+function leaveDraft() {
+  if (DRAFT && DRAFT.dirty &&
+      !confirm("Discard your unsaved changes to “" + (DRAFT.name || "this draft") + "”?")) return false;
+  DRAFT = null;
+  return true;
+}
+async function openDoc(id) {
+  if (!leaveDraft()) return;
+  try {
+    const r = await api(docApi(KIND) + "?name=" + encodeURIComponent(id));
+    DRAFT = { kind: KIND, id: r.id, name: r.name, subject: r.subject || "", greeting: r.greeting || "",
+              html: r.html || "", no_company: !!r.no_company, dirty: false };
+  } catch (e) { toast(e.message); }
+  renderDocs();
+}
+$("newDoc").onclick = () => {
+  if (!leaveDraft()) return;
+  const general = KIND === "email" && SIDE === "general";
+  DRAFT = { kind: KIND, id: "", subject: "", greeting: "", ...STARTER[general ? "general" : KIND],
+            no_company: general, dirty: true };
+  renderDocs();
+};
+$("sideSeg").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-side]");
+  if (!b || b.dataset.side === SIDE || !leaveDraft()) return;
+  SIDE = b.dataset.side; renderDocs();
+});
+async function saveDraft() {
+  const d = DRAFT, email = d.kind === "email";
+  const body = email ? { id: d.id, name: d.name, subject: d.subject, greeting: d.greeting, html: d.html,
+                         no_company: d.no_company }
+                     : { id: d.id, name: d.name, html: d.html };
+  try {
+    const r = await api(docApi(d.kind), body);
+    d.id = r.id; d.dirty = false;
+    await refresh();
+    toast("Saved");
+    return true;
+  } catch (e) { toast("Could not save: " + e.message); return false; }
+}
+async function docAction(act) {
+  const d = DRAFT; if (!d) return;
+  if (act === "close") { if (leaveDraft()) renderDocs(); return; }
+  if (act === "save") return saveDraft();
+  if (act === "use" && d.dirty && !(await saveDraft())) return;
+  try {
+    await api(docApi(d.kind) + "/use", { id: act === "use" ? d.id : "" });
+    await refresh();
+    toast(act === "unuse" ? "Rows without their own pick now go out with no cover letter"
+      : "“" + d.name + "” is now the default " + (d.kind === "cover" ? "cover letter"
+        : d.no_company ? "email for rows with no company name" : "email for rows with a company name"));
+  } catch (e) { toast(e.message); }
+}
+async function deleteDoc(id) {
+  const it = docItems().find((x) => x.id === id);
+  if (!confirm("Delete “" + (it ? it.name : id) + "”? This cannot be undone.")) return;
+  try {
+    await api(docApi(KIND) + "/delete", { id });
+    if (DRAFT && DRAFT.kind === KIND && DRAFT.id === id) DRAFT = null;
+    await refresh(); toast("Deleted");
+  } catch (e) { toast(e.message); }
+}
+function changed() {
+  DRAFT.dirty = true;
+  $("saveDoc").textContent = "Save •";
+  const t = document.querySelector(".tcard.open .tname"); if (t) t.textContent = DRAFT.name || "Untitled";
+  schedulePreview();
+}
+
+/* rich text */
+document.addEventListener("selectionchange", () => {
+  const ed = $("ed"), sel = window.getSelection();
+  if (!ed || !sel.rangeCount || !ed.contains(sel.getRangeAt(0).commonAncestorContainer)) return;
+  savedRange = sel.getRangeAt(0).cloneRange();
+  document.querySelectorAll(".toolbar button[data-cmd]").forEach((b) => {
+    if (["bold", "italic", "underline"].includes(b.dataset.cmd))
+      b.classList.toggle("on", document.queryCommandState(b.dataset.cmd));
+  });
+  const block = document.querySelector('.toolbar [data-cmd="block"]');
+  if (block) block.value = ["h2", "h3"].includes(document.queryCommandValue("formatBlock")) ?
+    document.queryCommandValue("formatBlock") : "p";
+});
+function restoreSel() {
+  const ed = $("ed"); ed.focus();
+  if (savedRange && ed.contains(savedRange.commonAncestorContainer)) {
+    const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(savedRange);
+  }
+}
+function exec(name, value) {
+  restoreSel();
+  document.execCommand("styleWithCSS", false, false);
+  document.execCommand(name, false, value);
+  DRAFT.html = $("ed").innerHTML; changed();
+}
+function addLink() {
+  let url = (prompt("Link address", "https://") || "").trim();
+  if (!url || url === "https://") return;
+  if (!/^(https?:|mailto:)/i.test(url)) url = (url.includes("@") && !url.includes("/") ? "mailto:" : "https://") + url;
+  restoreSel();
+  if (window.getSelection().isCollapsed)
+    exec("insertHTML", '<a href="' + esc(url) + '">' + esc(url.replace(/^mailto:/i, "")) + "</a>");
+  else exec("createLink", url);
+}
+$("docList").addEventListener("mousedown", (e) => { if (e.target.closest(".toolbar button")) e.preventDefault(); });
+$("docList").addEventListener("focusin", (e) => {
+  if (e.target.id === "ed") document.execCommand("defaultParagraphSeparator", false, "p");
+});
+$("docList").addEventListener("paste", (e) => {
+  if (!e.target.closest || !e.target.closest("#ed")) return;
+  e.preventDefault();
+  document.execCommand("insertText", false, e.clipboardData.getData("text/plain"));
+});
+$("docList").addEventListener("click", (e) => {
+  const tb = e.target.closest(".toolbar button");
+  if (tb) {
+    const c = tb.dataset.cmd;
+    return c === "color" ? $("clrPick").click() : c === "link" ? addLink() : exec(c);
+  }
+  const del = e.target.closest("[data-del]");
+  if (del) return deleteDoc(del.dataset.del);
+  const open = e.target.closest("[data-open]");
+  if (open) return openDoc(open.dataset.open);
+  const act = e.target.closest("[data-act]");
+  if (act) return docAction(act.dataset.act);
+  const m = e.target.closest("#pvMode [data-m]");
+  if (m && DRAFT) {
+    PVMODE[DRAFT.kind] = m.dataset.m;
+    document.querySelectorAll("#pvMode button").forEach((b) => b.classList.toggle("on", b === m));
+    schedulePreview(0);
+  }
+});
+$("docList").addEventListener("change", (e) => {
+  const t = e.target;
+  if (t.id === "clrPick") { $("clrMark").style.borderBottomColor = t.value; exec("foreColor", t.value); }
+  else if (t.dataset.cmd === "block") exec("formatBlock", "<" + t.value + ">");
+  else if (t.dataset.cmd === "field") { const v = t.value; t.value = ""; if (v) exec("insertText", "{{" + v + "}}"); }
+});
+$("docList").addEventListener("input", (e) => {
+  const t = e.target;
+  if (t.dataset && t.dataset.d) { DRAFT[t.dataset.d] = t.value; changed(); }
+  else if (t.id === "ed") { DRAFT.html = t.innerHTML; changed(); }
+});
+
+/* preview */
+function schedulePreview(ms) {
+  clearTimeout(pvTimer);
+  pvTimer = setTimeout(runPreview, ms === undefined ? (DRAFT && PVMODE[DRAFT.kind] === "pdf" ? 900 : 400) : ms);
+}
+const problem = (msg) => (msg ? '<div class="pvproblem">' + esc(msg) + "</div>" : "");
+const attachRow = (names) => '<div class="attachrow">' + names.map((a) =>
+  '<span class="attach"><span class="pdf">PDF</span>' + esc(a) + "</span>").join("") + "</div>";
+function frame(f, html) {
+  f.onload = () => {
+    try {
+      const cs = getComputedStyle(f);
+      f.style.height = f.contentDocument.documentElement.scrollHeight +
+        parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom) + "px";
+    } catch (e) { /* keep the default height */ }
+  };
+  f.srcdoc = html;
+}
+async function runPreview() {
+  const d = DRAFT, out = $("pvOut");
+  if (!d || !out) return;
+  const mode = PVMODE[d.kind];
+  try {
+    if (d.kind === "email") {
+      const r = await api("/api/template/preview",
+        { subject: d.subject, greeting: d.greeting, html: d.html, no_company: d.no_company, tz: TZ() });
+      if (DRAFT !== d) return;
+      out.innerHTML = problem(r.problem) +
+        '<div class="pvhead"><div class="subj">' + esc(r.subject || "(no subject)") + '</div><div class="meta"><b>' +
+        esc(r.from) + "</b><br>to " + esc(r.to) + "</div></div>" +
+        (mode === "text" ? '<pre class="pvtext">' + esc(r.text) + "</pre>"
+          : '<iframe class="pvframe" sandbox="allow-same-origin" id="pvFrame"></iframe>') +
+        attachRow(r.attachments);
+      if (mode !== "text") frame($("pvFrame"), r.html);
+    } else if (mode === "pdf") {
+      const blob = await apiBlob("/api/cover/pdf", { html: d.html, tz: TZ() });
+      if (DRAFT !== d) return;
+      if (pdfUrl) URL.revokeObjectURL(pdfUrl);
+      pdfUrl = URL.createObjectURL(blob);
+      out.innerHTML = '<iframe class="pdfframe" title="Cover letter PDF" src="' + pdfUrl +
+        '#view=FitH&navpanes=0"></iframe>';
+    } else {
+      const r = await api("/api/cover/preview", { html: d.html, tz: TZ() });
+      if (DRAFT !== d) return;
+      out.innerHTML = problem(r.problem) +
+        '<div class="pagewrap"><iframe class="pageframe" sandbox="allow-same-origin" id="pvFrame"></iframe></div>' +
+        attachRow([r.filename]);
+      frame($("pvFrame"), PAGE_CSS + r.html);
+    }
+  } catch (e) { if (DRAFT === d) out.innerHTML = problem(e.message); }
+}
+
+/* ---------- resumes ---------- */
+function renderResumes() {
+  const d = RDRAFT;
+  $("resumeWhere").textContent = ONLINE
+    ? "Uploaded PDFs are stored in your online database (up to 700 KB each)."
+    : "Uploaded PDFs are copied into the resumes/ folder here, which git ignores.";
+  let html = d && !d.id ? resumeCard(d, null) : "";
+  html += S.resumes.map((r) => resumeCard(d && d.id === r.id ? d : null, r)).join("");
+  $("resumeList").innerHTML = html ||
+    '<div class="empty">No resumes yet. Press <b>+ Add resume</b> and upload a PDF.</div>';
+  if (d) showResumePdf();
+}
+function resumeCard(open, r) {
+  const id = r ? r.id : "", isDef = !!r && r.id === S.active_resume;
+  const sub = r ? (r.ok ? "sent as " + r.filename : "file missing: " + r.path) : "not saved yet";
+  let h = '<div class="tcard' + (open ? " open" : "") + '"><div class="thead"' +
+    (open ? "" : ' data-ropen="' + esc(id) + '"') + ">" +
+    '<span class="tname">' + esc((open ? open.name : r.name) || "New resume") + "</span>" +
+    '<span class="tsub' + (r && !r.ok ? " badtext" : "") + '">' + esc(sub) + "</span>" +
+    (isDef ? '<span class="inuse">Default</span>' : "") +
+    (r ? '<button class="iconbtn" data-rdel="' + esc(id) + '" title="Delete">' + ICON.trash + "</button>" : "") +
+    "</div>";
+  if (open) h += resumeBody(open, isDef);
+  return h + "</div>";
+}
+function resumeBody(d, isDef) {
+  return '<div class="tbody"><div class="grid2">' +
+    '<div><label>Name — only you see this</label><input data-r="name" value="' + esc(d.name) +
+    '" placeholder="e.g. AI Engineer resume"></div>' +
+    '<div><label>Attachment filename — what the company sees</label><input data-r="filename" value="' +
+    esc(d.filename) + '" placeholder="e.g. Your_Name_Resume.pdf"></div></div>' +
+    '<div style="margin-top:12px"><label>PDF</label><div class="row" style="flex-wrap:nowrap">' +
+    (d.upload ? '<input value="Uploading ' + esc(d.upload.name) + ' when you save" disabled>'
+      : ONLINE ? '<input value="' + (d.id ? "Stored online — upload a PDF to replace it" : "No PDF chosen yet") + '" disabled>'
+      : '<input data-r="path" value="' + esc(d.path) + '" placeholder="Upload a PDF, or paste the path to one on this Mac">') +
+    '<button class="btn" data-ract="upload" style="white-space:nowrap">Upload PDF…</button></div></div>' +
+    '<div class="pv" style="margin-top:14px;position:static"><div class="pvscroll" id="resumePv"></div></div>' +
+    '<div class="row" style="margin-top:14px;align-items:center"><button class="btn" data-ract="close">Close</button>' +
+    (d.id && !isDef ? '<button class="btn right" data-ract="use">Make default</button>' : '<span class="right"></span>') +
+    '<button class="btn primary" data-ract="save" id="saveResume">' + (d.dirty ? "Save •" : "Save") +
+    "</button></div></div>";
+}
+async function showResumePdf() {
+  const d = RDRAFT, box = $("resumePv");
+  if (!d || !box) return;
+  let blob = d.upload || null;
+  if (!blob && d.id && !d.pathEdited) {
+    try { blob = await apiBlob("/api/resume/file?name=" + encodeURIComponent(d.id)); }
+    catch (e) { if (RDRAFT === d) box.innerHTML = problem(e.message); return; }
+  }
+  if (RDRAFT !== d) return;
+  if (!blob) {
+    box.innerHTML = '<p class="muted" style="padding:16px;margin:0">Upload a PDF, or save a path, to see it here.</p>';
+    return;
+  }
+  if (resumeUrl) URL.revokeObjectURL(resumeUrl);
+  resumeUrl = URL.createObjectURL(blob);
+  box.innerHTML = '<iframe class="pdfframe" title="Resume PDF" src="' + resumeUrl + '#view=FitH&navpanes=0"></iframe>';
+}
+function leaveResume() {
+  if (RDRAFT && RDRAFT.dirty && !confirm("Discard your unsaved changes to this resume?")) return false;
+  RDRAFT = null;
+  return true;
+}
+const readDataUrl = (file) => new Promise((ok, fail) => {
+  const fr = new FileReader(); fr.onload = () => ok(fr.result); fr.onerror = () => fail(fr.error);
+  fr.readAsDataURL(file);
+});
+async function saveResume() {
+  const d = RDRAFT;
+  const body = { id: d.id, name: d.name.trim(), filename: d.filename.trim(), path: d.upload ? "" : d.path };
+  try {
+    if (d.upload) body.data = await readDataUrl(d.upload);
+    const r = await api("/api/resume", body);
+    RDRAFT = null;
+    await refresh();
+    const saved = S.resumes.find((x) => x.id === r.id);
+    RDRAFT = { id: r.id, name: saved.name, filename: saved.filename, path: saved.path, dirty: false };
+    renderResumes(); toast("Resume saved");
+  } catch (e) { toast("Could not save: " + e.message); }
+}
+$("newResume").onclick = () => {
+  if (!leaveResume()) return;
+  RDRAFT = { id: "", name: "", filename: "", path: "", dirty: true };
+  renderResumes();
+  $("resumeFile").click();
+};
+$("resumeFile").addEventListener("change", (e) => {
+  const file = e.target.files[0]; e.target.value = "";
+  if (!file || !RDRAFT) return;
+  if (!/\.pdf$/i.test(file.name) && file.type !== "application/pdf") return toast("Pick a PDF file.");
+  RDRAFT.upload = file; RDRAFT.dirty = true;
+  if (!RDRAFT.name) RDRAFT.name = file.name.replace(/\.pdf$/i, "").replace(/[_-]+/g, " ");
+  if (!RDRAFT.filename) RDRAFT.filename = file.name;
+  renderResumes();
+});
+$("resumeList").addEventListener("click", async (e) => {
+  const del = e.target.closest("[data-rdel]");
+  if (del) {
+    if (!confirm("Delete the resume “" + nameOf(S.resumes, del.dataset.rdel) + "”?")) return;
+    try {
+      await api("/api/resume/delete", { id: del.dataset.rdel });
+      if (RDRAFT && RDRAFT.id === del.dataset.rdel) RDRAFT = null;
+      await refresh(); toast("Deleted");
+    } catch (err) { toast(err.message); }
+    return;
+  }
+  const open = e.target.closest("[data-ropen]");
+  if (open) {
+    if (!leaveResume()) return;
+    const r = S.resumes.find((x) => x.id === open.dataset.ropen);
+    RDRAFT = { id: r.id, name: r.name, filename: r.filename, path: r.path, dirty: false };
+    return renderResumes();
+  }
+  const act = (e.target.closest("[data-ract]") || {}).dataset;
+  if (!act || !RDRAFT) return;
+  if (act.ract === "close") { if (leaveResume()) renderResumes(); }
+  else if (act.ract === "upload") $("resumeFile").click();
+  else if (act.ract === "save") saveResume();
+  else if (act.ract === "use") {
+    try { await api("/api/resume/use", { id: RDRAFT.id }); await refresh();
+          toast("“" + RDRAFT.name + "” is now the default resume"); }
+    catch (err) { toast(err.message); }
+  }
+});
+$("resumeList").addEventListener("input", (e) => {
+  const f = e.target.dataset.r;
+  if (!f || !RDRAFT) return;
+  RDRAFT[f] = e.target.value; RDRAFT.dirty = true;
+  if (f === "path") RDRAFT.pathEdited = true;
+  $("saveResume").textContent = "Save •";
+  const t = document.querySelector("#resumeList .tcard.open .tname");
+  if (t && f === "name") t.textContent = RDRAFT.name || "New resume";
+});
 
 /* ---------- setup ---------- */
+const SETUP_FIELDS = ["sender_name", "sender_email", "reply_to", "phone", "linkedin", "github", "portfolio"];
 function renderSetup() {
-  const e = S.env, cfg = S.config || {};
-  const row = (ok, label, detail) =>
-    '<div class="note' + (ok ? "" : " bad") + '"><b>' + (ok ? "OK" : "Missing") + "</b> · " +
-    label + (detail ? " — " + detail : "") + "</div>";
-  $("envBlock").innerHTML =
-    row(e.storage, "Database", e.storage ? "connected" : "add Upstash Redis in Vercel → Storage") +
-    row(!!e.gmail_address, "<code>GMAIL_ADDRESS</code>", esc(e.gmail_address || "not set")) +
-    row(e.has_app_password, "<code>GMAIL_APP_PASSWORD</code>",
-        e.has_app_password ? "set (never shown here)" : "16-character Google App Password") +
-    row(e.has_ui_password, "<code>UI_PASSWORD</code>",
-        e.has_ui_password ? "set" : "anyone could open this page without it") +
-    '<p class="hint" style="margin:0">Sending over: <b>' + esc(e.transport) + "</b></p>";
-  const r = S.resume || {};
-  $("resumeNote").innerHTML = r.ok
-    ? '<div class="note"><b>' + esc(r.name) + "</b> · " + Math.round(r.bytes / 1024) + " KB</div>"
-    : '<div class="note bad"><b>No resume uploaded.</b> Nothing can be sent without it.</div>';
-  ["sender_name", "reply_to", "resume_filename", "phone", "linkedin", "github", "portfolio"]
-    .forEach((k) => ($("c_" + k).value = cfg[k] || ""));
+  const c = S.config;
+  SETUP_FIELDS.forEach((k) => ($("c_" + k).value = c[k] || ""));
+  $("c_app_password").placeholder = c.has_password ? "•••••••••••••••• saved" : "not set yet";
+  $("c_app_password").value = "";
+  if (ONLINE) $("setupWhere").textContent = "Saved in your online database.";
+  if (ONLINE) {                      // these two come from Vercel environment variables
+    $("c_sender_email").disabled = $("c_app_password").disabled = true;
+    $("appPwHint").hidden = true;
+    $("c_app_password").placeholder = c.has_password ? "set in Vercel (GMAIL_APP_PASSWORD)" : "not set — add GMAIL_APP_PASSWORD in Vercel";
+  }
+  let note = "";
+  if (ONLINE)
+    note += '<div class="note"><b>Online version.</b> The Gmail address and app password are Vercel ' +
+      "environment variables (<code>GMAIL_ADDRESS</code>, <code>GMAIL_APP_PASSWORD</code>) — change them " +
+      "there, then redeploy. Everything else on this page is saved in your online database.</div>";
+  if (!c.has_password)
+    note += '<div class="note bad"><b>No app password yet.</b> This is the one thing blocking every ' +
+      (ONLINE ? "send. Add GMAIL_APP_PASSWORD in Vercel." : "send. A normal Gmail password will not work — Google blocks it for SMTP.") + "</div>";
+  if (c.missing.some((m) => m.startsWith("a resume")))
+    note += '<div class="note bad"><b>No usable resume yet.</b> Add one on the Resume tab.</div>';
+  $("setupNote").innerHTML = note;
 }
 $("saveCfg").onclick = async () => {
   const patch = {};
-  ["sender_name", "reply_to", "resume_filename", "phone", "linkedin", "github", "portfolio"]
-    .forEach((k) => (patch[k] = $("c_" + k).value));
-  try { await api("/api/config", patch); await refresh(); toast("Saved"); }
+  SETUP_FIELDS.forEach((k) => (patch[k] = $("c_" + k).value));
+  const pw = $("c_app_password").value.trim();
+  if (pw && !ONLINE) patch.app_password = pw;
+  try { await api("/api/config", patch); await refresh(); toast(ONLINE ? "Saved" : "Saved to config.json"); }
   catch (e) { toast("Could not save: " + e.message); }
 };
-$("saveResume").onclick = () => {
-  const file = $("resumeFile").files[0];
-  if (!file) return toast("Choose a PDF first.");
-  if (file.size > 4 * 1024 * 1024) return toast("That PDF is bigger than 4 MB.");
-  const reader = new FileReader();
-  reader.onload = async () => {
-    try {
-      await api("/api/config", { resume_b64: String(reader.result).split(",")[1],
-                                 resume_name: file.name });
-      await refresh(); toast("Resume uploaded");
-    } catch (e) { toast("Upload failed: " + e.message); }
-  };
-  reader.readAsDataURL(file);
-};
 
-/* ---------- login ---------- */
-function showLogin() { $("login").classList.add("show"); $("logout").hidden = true;
-                       setTimeout(() => $("loginPw").focus(), 50); }
+/* ---------- access ---------- */
+const denied = () => (ONLINE ? showLogin() : showLocked());
+function showLogin() {
+  TOK = ""; sessionStorage.removeItem("jm_token");
+  $("login").classList.add("show"); $("logout").hidden = true;
+  setTimeout(() => $("loginPw").focus(), 50);
+}
 $("loginForm").addEventListener("submit", async (e) => {
-  e.preventDefault(); $("loginErr").textContent = "";
-  const r = await fetch("/api/login", { method: "POST",
+  e.preventDefault();
+  $("loginErr").textContent = "";
+  const r = await fetch(route("/api/login"), { method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ password: $("loginPw").value }) });
-  const j = await r.json().catch(() => ({ error: "the server did not answer" }));
+  const j = await r.json().catch(() => ({ error: "bad response" }));
   if (j.token) {
-    TOK = j.token; sessionStorage.setItem("jm_token", TOK); $("loginPw").value = "";
-    $("login").classList.remove("show"); $("logout").hidden = false;
-    refresh().catch((err) => toast(err.message));
+    TOK = j.token; sessionStorage.setItem("jm_token", TOK);
+    $("loginPw").value = ""; $("login").classList.remove("show"); $("logout").hidden = false;
+    refresh().catch((err) => { if (err.message !== "Please log in") toast(err.message); });
   } else { $("loginErr").textContent = j.error || "Wrong password"; }
 });
-$("logout").onclick = () => { TOK = ""; sessionStorage.removeItem("jm_token"); showLogin(); };
+$("logout").onclick = () => { if (!RUNNING) showLogin(); };
+function showLocked() {
+  document.body.innerHTML = "<main><div class=\"card\"><h2>Open the link printed in your " +
+    "terminal</h2><p class=\"hint\">The server was restarted or this tab is stale. Run " +
+    "<code>python3 web_ui.py</code> and use the link it prints.</p></div></main>";
+}
 
+/* ---------- start ---------- */
 (async function boot() {
+  if (!ONLINE) sessionStorage.setItem("jm_token", BOOT);
   TOK = sessionStorage.getItem("jm_token") || "";
-  if (!TOK) return showLogin();
-  try { await refresh(); $("logout").hidden = false; }
-  catch (e) { if (e.message !== "Please log in") toast(e.message); }
+  if (!TOK) return denied();
+  try {
+    await refresh();
+    if (ONLINE) $("logout").hidden = false;
+    else if ((await api("/api/run")).active) watchSend();   // a send still going after a reload
+  } catch (e) { if (e.message !== "Please log in") toast("Could not load: " + e.message); }
 })();
 </script>
 </body>

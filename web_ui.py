@@ -3,41 +3,35 @@
 Local web UI for the job application mailer.
 
     python3 web_ui.py                    # localhost only, link printed below
-    python3 web_ui.py --set-password     # set the login password
-    python3 web_ui.py --host 0.0.0.0     # reachable from other machines (needs a password)
 
-Everything the CLI does — edit the queue, dry-run previews, test send, real send —
-with buttons instead of flags. Standard library only.
+Edit the queue, design emails and cover letters, and send — with buttons instead
+of flags. Dry runs and test sends stay on the CLI. Standard library only.
 
 All the actual work is still done by send_applications.py. This is a front end,
 not a second implementation.
 
-SECURITY: this page can send email as you and holds a Gmail app password. It binds
-to 127.0.0.1 unless you say otherwise, and refuses to listen on any other address
-until a login password is set. Plain HTTP is not encrypted — if you want to reach
-it from outside this Mac, put it behind a tunnel that terminates TLS (Tailscale,
-Cloudflare Tunnel, ngrok) rather than forwarding a port on your router.
+SECURITY: this page can send email as you and holds a Gmail app password. It only
+binds to 127.0.0.1, and only answers requests carrying the one-time token from the
+link it prints at startup.
 """
 
 import argparse
 import base64
 import contextlib
 import csv
-import getpass
-import hashlib
-import hmac
 import io
 import json
 import os
+import re
 import secrets
 import threading
-import time
 import webbrowser
 from datetime import datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
+import cover_pdf
 import send_applications as sa
 
 ROOT = Path(__file__).resolve().parent
@@ -45,10 +39,10 @@ INDEX = ROOT / "web" / "index.html"
 URL_FILE = ROOT / ".ui_url"
 TOKEN = secrets.token_urlsafe(16)
 
-CONFIG_TEXT_FIELDS = ["sender_name", "sender_email", "reply_to", "resume_path",
-                      "resume_filename", "phone", "linkedin", "github", "portfolio"]
-JOB_FIELDS = ["company", "role", "contact_name", "email", "source", "job_url",
-              "location", "notes", "status", "sent_at"]
+CONFIG_TEXT_FIELDS = ["sender_name", "sender_email", "reply_to", "phone", "linkedin",
+                      "github", "portfolio"]
+JOB_FIELDS = ["company", "role", "contact_name", "email", "template", "cover", "resume",
+              "source", "job_url", "location", "notes", "status", "sent_at"]
 LOCAL_HOSTS = {"127.0.0.1", "::1", "localhost"}
 
 
@@ -61,79 +55,6 @@ def _die(msg):
 
 
 sa.die = _die
-
-
-# --------------------------------------------------------------------------- #
-# login
-# --------------------------------------------------------------------------- #
-
-SESSIONS = {}                  # token -> expiry timestamp
-SESSION_TTL = 12 * 3600
-FAILS = {}                     # ip -> [count, locked_until]
-AUTH_LOCK = threading.Lock()
-
-
-def hash_password(password, rounds=240000):
-    salt = secrets.token_bytes(16)
-    digest = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, rounds)
-    return "pbkdf2$%d$%s$%s" % (rounds, base64.b64encode(salt).decode(),
-                                base64.b64encode(digest).decode())
-
-
-def verify_password(password, stored):
-    try:
-        scheme, rounds, salt_b64, digest_b64 = str(stored).split("$")
-        if scheme != "pbkdf2":
-            return False
-        digest = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"),
-                                     base64.b64decode(salt_b64), int(rounds))
-        return hmac.compare_digest(digest, base64.b64decode(digest_b64))
-    except (ValueError, TypeError):
-        return False
-
-
-def password_is_set():
-    return bool(read_config_raw().get("ui_password_hash"))
-
-
-def new_session():
-    now = time.time()
-    with AUTH_LOCK:
-        for tok, exp in list(SESSIONS.items()):
-            if exp <= now:
-                del SESSIONS[tok]
-        token = secrets.token_urlsafe(24)
-        SESSIONS[token] = now + SESSION_TTL
-    return token
-
-
-def valid_session(token):
-    with AUTH_LOCK:
-        expiry = SESSIONS.get(token)
-        if expiry and expiry > time.time():
-            return True
-        SESSIONS.pop(token, None)
-    return False
-
-
-def login_attempt(ip, password):
-    """Returns (token, error, retry_after)."""
-    with AUTH_LOCK:
-        count, until = FAILS.get(ip, [0, 0])
-    if until > time.time():
-        return None, "too many attempts", int(until - time.time())
-    stored = read_config_raw().get("ui_password_hash")
-    if not stored:
-        return None, "no login password is set — set one on the Setup tab from the Mac itself", 0
-    if verify_password(password or "", stored):
-        with AUTH_LOCK:
-            FAILS.pop(ip, None)
-        return new_session(), "", 0
-    with AUTH_LOCK:
-        count += 1
-        wait = 0 if count < 3 else min(300, 5 * (2 ** (count - 3)))
-        FAILS[ip] = [count, time.time() + wait]
-    return None, "wrong password", wait
 
 
 # --------------------------------------------------------------------------- #
@@ -213,20 +134,19 @@ def write_config_raw(cfg):
 
 
 def config_state():
-    """Never includes the app password or the login hash — only whether they exist."""
+    """Never includes the app password — only whether it exists."""
     cfg = read_config_raw()
     out = {k: str(cfg.get(k) or "") for k in CONFIG_TEXT_FIELDS}
     pw = str(cfg.get("app_password") or "")
     out["has_password"] = bool(pw) and not pw.startswith("PUT_")
-    out["has_ui_password"] = bool(cfg.get("ui_password_hash"))
-    resume = Path(os.path.expanduser(out["resume_path"])) if out["resume_path"] else None
-    out["resume_ok"] = bool(resume and resume.exists())
-    out["resume_full"] = str(resume) if resume else ""
-    missing = [k for k in ("sender_name", "sender_email", "resume_path") if not out[k]]
+    missing = [k for k in ("sender_name", "sender_email") if not out[k]]
     if not out["has_password"]:
         missing.append("app_password")
+    resume = sa.read_resume(sa.active_resume_name(cfg))
+    if not (resume and resume["ok"]):
+        missing.append("a resume (Resume tab)")
     out["missing"] = missing
-    out["ready"] = not missing and out["resume_ok"]
+    out["ready"] = not missing
     return out
 
 
@@ -245,13 +165,13 @@ def existing_header():
     return list(JOB_FIELDS)
 
 
-def jobs_state():
+def jobs_state(cfg):
     rows = sa.load_jobs() if sa.JOBS_PATH.exists() else []
     seen = sa.already_sent_addresses()
     out = []
     for row in rows:
-        item = {k: (v or "") for k, v in row.items() if not k.startswith("_")}
-        item["_skip"] = sa.check(row, seen) or ""
+        item = {k: (v or "") for k, v in row.items() if k and not k.startswith("_")}
+        item["_skip"] = sa.check(row, seen) or sa.pick_problem(row, cfg) or ""
         out.append(item)
     return out
 
@@ -264,7 +184,8 @@ def sent_log_state():
 
 
 def state():
-    jobs = jobs_state()
+    cfg = read_config_raw()
+    jobs = jobs_state(cfg)
     ready = sum(1 for j in jobs if not j["_skip"])
     sent = sum(1 for j in jobs if (j.get("status") or "").lower() == "sent")
     return {
@@ -272,8 +193,14 @@ def state():
         "jobs": jobs,
         "header": existing_header(),
         "counts": {"total": len(jobs), "ready": ready, "blocked": len(jobs) - ready, "sent": sent},
-        "templates": sorted(p.name for p in (ROOT / "templates").glob("*.txt")),
-        "previews": sorted(p.name for p in sa.PREVIEW_DIR.glob("*.txt")),
+        "templates": sa.list_templates(),
+        "active_template": sa.active_template_name(cfg),
+        "active_general_template": sa.active_general_name(cfg),
+        "covers": sa.list_covers(),
+        "active_cover": sa.active_cover_name(cfg),
+        "resumes": sa.list_resumes(),
+        "active_resume": sa.active_resume_name(cfg),
+        "placeholders": sa.PLACEHOLDERS,
         "sent_log": sent_log_state(),
         "defaults": {"limit": 25, "delay": 45},
     }
@@ -288,18 +215,9 @@ def save_config(patch):
     for key in CONFIG_TEXT_FIELDS:
         if key in patch:
             cfg[key] = str(patch[key]).strip()
-    pw = str(patch.get("app_password") or "").strip()
+    pw = "".join(str(patch.get("app_password") or "").split())   # no spaces of any kind
     if pw:                                    # blank means "keep the stored one"
         cfg["app_password"] = pw
-    ui_pw = str(patch.get("ui_password") or "").strip()
-    if ui_pw:
-        if len(ui_pw) < 8:
-            raise Abort("Login password must be at least 8 characters.")
-        cfg["ui_password_hash"] = hash_password(ui_pw)
-    if patch.get("ui_password_clear"):
-        cfg.pop("ui_password_hash", None)
-        with AUTH_LOCK:
-            SESSIONS.clear()
     write_config_raw(cfg)
 
 
@@ -314,68 +232,55 @@ def save_jobs(rows):
     return len(clean)
 
 
-def build_queue(cfg, subject_tpl, body_tpl, limit, only):
-    """Mirrors the selection loop in send_applications.main()."""
+def row_key(email, company):
+    return ((email or "").strip().lower(), (company or "").strip().lower())
+
+
+def picked_keys(payload):
+    """The rows ticked on the Queue tab, as (email, company) — the same pair the sent log
+    uses to never mail anyone twice."""
+    keys = {row_key(*pair) for pair in payload.get("rows") or []
+            if isinstance(pair, (list, tuple)) and len(pair) == 2}
+    if not keys:
+        raise Abort("Tick at least one row to send.")
+    return keys
+
+
+def build_queue(cfg, limit, keys):
+    """Mirrors the selection loop in send_applications.main(), for the ticked rows only,
+    each with its own picks."""
     rows = sa.load_jobs()
     if not rows:
         raise Abort("jobs.csv has no rows yet. Add a company on the Queue tab first.")
     seen = sa.already_sent_addresses()
     queue, skipped = [], []
     for row in rows:
-        if only and only.lower() not in (row.get("company") or "").lower():
+        if row_key(row.get("email"), row.get("company")) not in keys:
             continue
-        reason = sa.check(row, seen)
+        reason = sa.check(row, seen) or sa.pick_problem(row, cfg)
         if reason:
-            skipped.append([row.get("company") or "?", reason])
+            skipped.append([sa.label(row), reason])
             continue
         if len(queue) >= limit:
-            skipped.append([row.get("company") or "?", "over the limit of %d" % limit])
+            skipped.append([sa.label(row), "over the limit of %d" % limit])
             continue
-        row["_attachment"] = cfg["resume_path"].name
-        queue.append((row, sa.build_message(row, cfg, subject_tpl, body_tpl)))
+        tpl, cover, resume = sa.load_picks(row, cfg)
+        queue.append((row, sa.build_message(row, cfg, tpl, resume, cover=cover)))
         seen.add((row["email"].lower().strip(), (row.get("company") or "").lower().strip()))
     return rows, queue, skipped
 
 
-def prepare(payload):
+def do_send(payload, keys):
     cfg = sa.load_config()
-    subject_tpl, body_tpl = sa.load_template(payload.get("template") or "application.txt")
     limit = max(1, int(payload.get("limit") or 25))
     delay = max(0, int(payload.get("delay") or 45))
-    only = (payload.get("only") or "").strip()
-    return cfg, subject_tpl, body_tpl, limit, delay, only
-
-
-def do_dryrun(payload):
-    cfg, subject_tpl, body_tpl, limit, _delay, only = prepare(payload)
-    _rows, queue, skipped = build_queue(cfg, subject_tpl, body_tpl, limit, only)
-    for stale in sa.PREVIEW_DIR.glob("*.txt"):    # a preview folder = exactly one run
-        stale.unlink()
-    written = [sa.write_preview(i, row, msg).name for i, (row, msg) in enumerate(queue, start=1)]
-    return {"written": written, "skipped": skipped, "count": len(queue)}
-
-
-def do_test(payload):
-    cfg, subject_tpl, body_tpl, _limit, _delay, _only = prepare(payload)
-    rows = sa.load_jobs()
-    sample = dict(rows[0]) if rows else {"company": "Test Company", "role": "AI Engineer"}
-    sample.setdefault("company", "Test Company")
-    sample["_attachment"] = cfg["resume_path"].name
-    msg = sa.build_message(sample, cfg, subject_tpl, body_tpl, to_addr=cfg["sender_email"])
-    log("Sending one test email to %s ..." % cfg["sender_email"])
-    writer = LineWriter()
-    with contextlib.redirect_stdout(writer):
-        sa.deliver([(sample, msg)], cfg, delay=0)
-    log("Done. Check your inbox and open the attachment.")
-
-
-def do_send(payload):
-    cfg, subject_tpl, body_tpl, limit, delay, only = prepare(payload)
-    rows, queue, skipped = build_queue(cfg, subject_tpl, body_tpl, limit, only)
+    rows, queue, skipped = build_queue(cfg, limit, keys)
     if not queue:
-        log("Nothing to send — every row was skipped.")
+        log("Nothing to send — every ticked row was skipped.")
+        for company, reason in skipped:
+            log("  skip  %-28s %s" % (company, reason))
         return
-    log("Sending %d email%s, %ds apart." % (len(queue), "" if len(queue) == 1 else "s", delay))
+    log("Sending 1 email." if len(queue) == 1 else "Sending %d emails, %ds apart." % (len(queue), delay))
     for company, reason in skipped:
         log("  skip  %-28s %s" % (company, reason))
     writer = LineWriter()
@@ -389,6 +294,212 @@ def do_send(payload):
     sa.save_jobs(rows, existing_header())
     good = sum(1 for _, ok in results if ok)
     log("Done. %d of %d sent. jobs.csv and sent_log.csv updated." % (good, len(results)))
+
+
+# --------------------------------------------------------------------------- #
+# emails and cover letters
+# --------------------------------------------------------------------------- #
+
+def doc_slug(name, path_for, fallback):
+    base = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")[:40] or fallback
+    slug, n = base, 2
+    while path_for(slug).exists():
+        slug, n = "%s-%d" % (base, n), n + 1
+    return slug + ".json"
+
+
+def write_doc(path, data):
+    path.parent.mkdir(exist_ok=True)
+    path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+
+
+def save_template(payload):
+    """Creates a new template when there is no id. Returns its id. "no_company" files it
+    with the emails for rows that have no company name."""
+    name = str(payload.get("name") or "").strip()
+    subject = str(payload.get("subject") or "").strip()
+    if not name:
+        raise Abort("Give the email a name.")
+    if not subject:
+        raise Abort("The subject line cannot be empty.")
+    tid = str(payload.get("id") or "")
+    if tid and not sa.read_template(tid):
+        raise Abort("That email no longer exists — reload the page.")
+    tid = sa.template_path(tid).name if tid else doc_slug(name, sa.template_path, "email")
+    data = {"name": name, "subject": subject,
+            "greeting": str(payload.get("greeting") or "").strip(),
+            "html": str(payload.get("html") or "")}
+    if payload.get("no_company"):
+        data["no_company"] = True
+    write_doc(sa.template_path(tid), data)
+    return tid
+
+
+def default_key(tpl):
+    return "active_general_template" if tpl["no_company"] else "active_template"
+
+
+def delete_template(tid):
+    tpl = sa.read_template(tid)
+    if not tpl:
+        raise Abort("That email no longer exists — reload the page.")
+    if len(sa.list_templates()) <= 1:
+        raise Abort("This is your only email. Make another one before deleting it.")
+    sa.template_path(tid).unlink()
+    cfg = read_config_raw()
+    if cfg.get(default_key(tpl)) == tpl["id"]:       # falls back to another of that kind
+        cfg.pop(default_key(tpl))
+        write_config_raw(cfg)
+
+
+def use_template(tid):
+    """Makes it the default for its kind: rows with a company name, or rows without."""
+    tpl = sa.read_template(tid)
+    if not tpl:
+        raise Abort("That email no longer exists — reload the page.")
+    cfg = read_config_raw()
+    cfg[default_key(tpl)] = tpl["id"]
+    write_config_raw(cfg)
+
+
+def save_cover(payload):
+    """Creates a new cover letter when there is no id. Returns its id."""
+    name = str(payload.get("name") or "").strip()
+    if not name:
+        raise Abort("Give the cover letter a name.")
+    cid = str(payload.get("id") or "")
+    if cid and not sa.read_cover(cid):
+        raise Abort("That cover letter no longer exists — reload the page.")
+    cid = sa.cover_path(cid).name if cid else doc_slug(name, sa.cover_path, "cover")
+    write_doc(sa.cover_path(cid), {"name": name, "html": str(payload.get("html") or "")})
+    return cid
+
+
+def delete_cover(cid):
+    if not sa.read_cover(cid):
+        raise Abort("That cover letter no longer exists — reload the page.")
+    path = sa.cover_path(cid)
+    path.unlink()
+    cfg = read_config_raw()
+    if cfg.get("active_cover") == path.name:      # back to sending without one
+        cfg.pop("active_cover")
+        write_config_raw(cfg)
+
+
+def use_cover(cid):
+    """An empty id means send without a cover letter."""
+    cfg = read_config_raw()
+    if cid:
+        if not sa.read_cover(cid):
+            raise Abort("That cover letter no longer exists — reload the page.")
+        cfg["active_cover"] = sa.cover_path(cid).name
+    else:
+        cfg.pop("active_cover", None)
+    write_config_raw(cfg)
+
+
+def preview_context(no_company=False):
+    """Previews are general: your own details filled in, the company's shown as [Company].
+    An email for rows with no company is previewed with no company, as it will be sent."""
+    raw = read_config_raw()
+    cfg = {k: str(raw.get(k) or "") for k in CONFIG_TEXT_FIELDS}
+    cfg["sender_name"] = cfg["sender_name"] or "Your Name"
+    cfg["sender_email"] = cfg["sender_email"] or "you@gmail.com"
+    return raw, cfg, {"company": "" if no_company else "[Company]", "role": "[Role]", "email": ""}
+
+
+def preview_template(payload):
+    """Unsaved edits rendered exactly as build_message would render them."""
+    raw, cfg, row = preview_context(bool(payload.get("no_company")))
+    tpl = {k: str(payload.get(k) or "") for k in ("subject", "greeting", "html")}
+    body = sa.render_body(tpl, row, cfg)
+    subject = sa.render_subject(tpl, row, cfg)
+    text = sa.html_to_text(body)
+    resume = sa.read_resume(sa.active_resume_name(raw))
+    attachments = [resume["filename"]] if resume else []
+    if sa.active_cover_name(raw):
+        attachments.append(sa.cover_filename(cfg))
+    return {
+        "from": "%s <%s>" % (cfg["sender_name"], cfg["sender_email"]),
+        "to": "[the company's email address]",
+        "subject": subject,
+        "html": sa.email_html(body),
+        "text": text,
+        "attachments": attachments,
+        "problem": sa.template_problem(subject, text) or "",
+    }
+
+
+def preview_cover(payload):
+    _raw, cfg, row = preview_context()
+    body = sa.render_cover({"html": str(payload.get("html") or "")}, row, cfg)
+    return {"html": body, "filename": sa.cover_filename(cfg),
+            "problem": sa.template_problem(sa.html_to_text(body)) or ""}
+
+
+def preview_cover_pdf(payload):
+    _raw, cfg, row = preview_context()
+    body = sa.render_cover({"html": str(payload.get("html") or "")}, row, cfg)
+    return cover_pdf.render(body, title="Cover letter")
+
+
+# --------------------------------------------------------------------------- #
+# resumes
+# --------------------------------------------------------------------------- #
+
+def save_resume(payload):
+    """Creates a new resume when there is no id. An upload ("data", base64) is copied
+    into resumes/files/; otherwise "path" points at a PDF already on this Mac."""
+    name = str(payload.get("name") or "").strip()
+    if not name:
+        raise Abort("Give the resume a name.")
+    rid = str(payload.get("id") or "")
+    if rid and not sa.read_resume(rid):
+        raise Abort("That resume no longer exists — reload the page.")
+    rid = sa.resume_doc(rid).name if rid else doc_slug(name, sa.resume_doc, "resume")
+    path = os.path.expanduser(str(payload.get("path") or "").strip())
+    if payload.get("data"):
+        try:
+            blob = base64.b64decode(str(payload["data"]).split(",", 1)[-1], validate=True)
+        except ValueError:
+            raise Abort("That upload could not be read — try again.")
+        if not blob.startswith(b"%PDF"):
+            raise Abort("That file is not a PDF.")
+        dest = sa.RESUME_DIR / "files" / (Path(rid).stem + ".pdf")
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_bytes(blob)
+        path = str(dest)
+    if not path:
+        raise Abort("Upload a PDF, or give the path to one on this Mac.")
+    if not Path(path).is_file():
+        raise Abort("There is no file at " + path)
+    filename = str(payload.get("filename") or "").strip() or os.path.basename(path)
+    write_doc(sa.resume_doc(rid), {"name": name, "path": path, "filename": filename})
+    return rid
+
+
+def delete_resume(rid):
+    res = sa.read_resume(rid)
+    if not res:
+        raise Abort("That resume no longer exists — reload the page.")
+    if len(sa.list_resumes()) <= 1:
+        raise Abort("This is your only resume. Add another one before deleting it.")
+    sa.resume_doc(rid).unlink()
+    uploads = (sa.RESUME_DIR / "files").resolve()
+    if res["file"].is_file() and res["file"].resolve().parent == uploads:
+        res["file"].unlink()                      # only copies this app made
+    cfg = read_config_raw()
+    if cfg.get("active_resume") == res["id"]:
+        cfg.pop("active_resume")
+        write_config_raw(cfg)
+
+
+def use_resume(rid):
+    if not sa.read_resume(rid):
+        raise Abort("That resume no longer exists — reload the page.")
+    cfg = read_config_raw()
+    cfg["active_resume"] = sa.resume_doc(rid).name
+    write_config_raw(cfg)
 
 
 # --------------------------------------------------------------------------- #
@@ -422,8 +533,6 @@ class Handler(BaseHTTPRequestHandler):
     def _authed(self):
         # A cross-origin page cannot set this header without a preflight we never answer.
         token = self.headers.get("X-Token") or ""
-        if token and valid_session(token):
-            return True
         return bool(token) and token == TOKEN and self._local()
 
     def _payload(self):
@@ -436,11 +545,10 @@ class Handler(BaseHTTPRequestHandler):
 
         if url.path == "/":
             boot = TOKEN if (self._local() and query.get("t", [""])[0] == TOKEN) else ""
-            if not boot and not password_is_set():
+            if not boot:
                 return self._send(
                     "<h1>Open the link printed in your terminal</h1>"
-                    "<p>Or set a login password so you can sign in from anywhere:<br>"
-                    "<code>python3 web_ui.py --set-password</code></p>",
+                    "<p>It is also saved in <code>.ui_url</code> next to web_ui.py.</p>",
                     403, "text/html; charset=utf-8")
             html = INDEX.read_text(encoding="utf-8").replace("__TOKEN__", boot)
             return self._send(html, 200, "text/html; charset=utf-8")
@@ -454,18 +562,21 @@ class Handler(BaseHTTPRequestHandler):
             return self._json(state())
         if url.path == "/api/run":
             return self._json(run_snapshot())
-        if url.path == "/api/preview":
-            name = os.path.basename(query.get("name", [""])[0])
-            path = sa.PREVIEW_DIR / name
-            if not name or not path.exists():
-                return self._json({"error": "no such preview"}, 404)
-            return self._json({"name": name, "text": path.read_text(encoding="utf-8")})
         if url.path == "/api/template":
-            name = os.path.basename(query.get("name", [""])[0])
-            path = ROOT / "templates" / name
-            if not name or not path.exists():
+            tpl = sa.read_template(query.get("name", [""])[0])
+            if not tpl:
                 return self._json({"error": "no such template"}, 404)
-            return self._json({"name": name, "text": path.read_text(encoding="utf-8")})
+            return self._json(tpl)
+        if url.path == "/api/cover":
+            cover = sa.read_cover(query.get("name", [""])[0])
+            if not cover:
+                return self._json({"error": "no such cover letter"}, 404)
+            return self._json(cover)
+        if url.path == "/api/resume/file":
+            res = sa.read_resume(query.get("name", [""])[0])
+            if not res or not res["ok"]:
+                return self._json({"error": "no such resume file"}, 404)
+            return self._send(res["file"].read_bytes(), 200, "application/pdf")
         return self._json({"error": "not found"}, 404)
 
     def do_POST(self):
@@ -477,20 +588,8 @@ class Handler(BaseHTTPRequestHandler):
         except ValueError:
             return self._json({"error": "bad json"}, 400)
 
-        if url.path == "/api/login":
-            token, error, wait = login_attempt(self.client_address[0], payload.get("password"))
-            if token:
-                return self._json({"token": token})
-            msg = error if not wait else "%s — try again in %ds" % (error, wait)
-            return self._json({"error": msg}, 403)
-
         if not self._authed():
             return self._json({"error": "not logged in"}, 403)
-
-        if url.path == "/api/logout":
-            with AUTH_LOCK:
-                SESSIONS.pop(self.headers.get("X-Token") or "", None)
-            return self._json({"ok": True})
 
         try:
             if url.path == "/api/config":
@@ -499,20 +598,38 @@ class Handler(BaseHTTPRequestHandler):
             if url.path == "/api/jobs":
                 return self._json({"ok": True, "saved": save_jobs(payload.get("rows") or [])})
             if url.path == "/api/template":
-                name = os.path.basename(payload.get("name") or "")
-                path = ROOT / "templates" / name
-                if not name or not path.exists():
-                    return self._json({"error": "no such template"}, 404)
-                path.write_text(payload.get("text") or "", encoding="utf-8")
+                return self._json({"ok": True, "id": save_template(payload)})
+            if url.path == "/api/template/delete":
+                delete_template(payload.get("id"))
                 return self._json({"ok": True})
-            if url.path == "/api/dryrun":
-                return self._json({"ok": True, **do_dryrun(payload)})
-            if url.path == "/api/test":
-                started = background("test", lambda: do_test(payload))
-                return self._json({"ok": started,
-                                   "error": "" if started else "a run is already going"})
+            if url.path == "/api/template/use":
+                use_template(payload.get("id"))
+                return self._json({"ok": True})
+            if url.path == "/api/template/preview":
+                return self._json(preview_template(payload))
+            if url.path == "/api/cover":
+                return self._json({"ok": True, "id": save_cover(payload)})
+            if url.path == "/api/cover/delete":
+                delete_cover(payload.get("id"))
+                return self._json({"ok": True})
+            if url.path == "/api/cover/use":
+                use_cover(payload.get("id") or "")
+                return self._json({"ok": True})
+            if url.path == "/api/cover/preview":
+                return self._json(preview_cover(payload))
+            if url.path == "/api/cover/pdf":
+                return self._send(preview_cover_pdf(payload), 200, "application/pdf")
+            if url.path == "/api/resume":
+                return self._json({"ok": True, "id": save_resume(payload)})
+            if url.path == "/api/resume/delete":
+                delete_resume(payload.get("id"))
+                return self._json({"ok": True})
+            if url.path == "/api/resume/use":
+                use_resume(payload.get("id"))
+                return self._json({"ok": True})
             if url.path == "/api/send":
-                started = background("send", lambda: do_send(payload))
+                keys = picked_keys(payload)
+                started = background("send", lambda: do_send(payload, keys))
                 return self._json({"ok": started,
                                    "error": "" if started else "a run is already going"})
         except Abort as exc:
@@ -522,62 +639,33 @@ class Handler(BaseHTTPRequestHandler):
         return self._json({"error": "not found"}, 404)
 
 
-def set_password_interactive():
-    first = getpass.getpass("New login password (min 8 chars): ")
-    if len(first) < 8:
-        raise SystemExit("Too short — nothing changed.")
-    if first != getpass.getpass("Again: "):
-        raise SystemExit("They did not match — nothing changed.")
-    cfg = read_config_raw()
-    cfg["ui_password_hash"] = hash_password(first)
-    write_config_raw(cfg)
-    print("\n  Login password saved to config.json (stored hashed, not in plain text).\n")
-
-
 def main():
     ap = argparse.ArgumentParser(description="Local web UI for the job application mailer.")
     ap.add_argument("--port", type=int, default=8765)
-    ap.add_argument("--host", default="127.0.0.1",
-                    help="bind address; anything but localhost requires a login password")
-    ap.add_argument("--set-password", action="store_true", help="set the login password and exit")
     ap.add_argument("--no-open", action="store_true", help="do not open a browser")
     args = ap.parse_args()
-
-    if args.set_password:
-        return set_password_interactive()
-
-    remote = args.host not in LOCAL_HOSTS
-    if remote and not password_is_set():
-        raise SystemExit(
-            "\n  Refusing to listen on %s with no login password.\n"
-            "  This page can send email as you and holds your Gmail app password.\n\n"
-            "      python3 web_ui.py --set-password\n" % args.host)
+    sa.adopt_config_resume(read_config_raw())
 
     httpd = None
     for port in range(args.port, args.port + 20):
         try:
-            httpd = ThreadingHTTPServer((args.host, port), Handler)
+            httpd = ThreadingHTTPServer(("127.0.0.1", port), Handler)
             break
         except OSError:
             continue
     if httpd is None:
         raise SystemExit("No free port in %d-%d." % (args.port, args.port + 19))
 
-    url = "http://%s:%d/?t=%s" % ("127.0.0.1" if not remote else args.host, port, TOKEN)
+    url = "http://127.0.0.1:%d/?t=%s" % (port, TOKEN)
     URL_FILE.write_text(url + "\n", encoding="utf-8")
     os.chmod(URL_FILE, 0o600)
 
     print("\n  Job Application Mailer — web UI")
     print("  %s\n" % url)
-    print("  Login password : %s" % ("set" if password_is_set() else "not set (localhost only)"))
-    print("  Listening on   : %s:%d" % (args.host, port))
-    if remote:
-        print("\n  WARNING: plain HTTP is not encrypted. Reach this through a tunnel that")
-        print("  terminates TLS (Tailscale, Cloudflare Tunnel, ngrok) — do not forward a")
-        print("  router port straight at it.")
+    print("  Listening on   : 127.0.0.1:%d (this Mac only)" % port)
     print("\n  Ctrl-C to stop.\n", flush=True)
 
-    if not args.no_open and not remote:
+    if not args.no_open:
         threading.Timer(0.5, lambda: webbrowser.open(url)).start()
     try:
         httpd.serve_forever()

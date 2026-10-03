@@ -67,9 +67,17 @@ Useful flags:
 ```bash
 --limit 10          # cap this run (default 25)
 --delay 60          # seconds between emails (default 45)
---template short.txt   # use the shorter email
+--template short.json  # use the shorter email
+--cover none        # leave the cover letter off this run
+--resume main       # send this resume to every row this run
 --only Systems      # only companies matching this text
 ```
+
+Each row in `jobs.csv` can pick its own email, cover letter and resume in the
+`template`, `cover` and `resume` columns (blank = the default; `none` in `cover` = no
+cover letter). Rows with a company name default to one email and rows without one to
+another: emails marked `"no_company": true` are for rows with no company. The `--template`,
+`--cover` and `--resume` flags override every row for one run.
 
 **Do the `--test` run once before your first real batch** — it proves the login works
 and lets you confirm the resume attachment opens properly on the other end.
@@ -106,12 +114,20 @@ and lets you confirm the resume attachment opens properly on the other end.
 
 ```
 send_applications.py    the tool
+web_ui.py               the same thing in a browser: python3 web_ui.py
+api/ + public/         the online (Vercel) version of the same app — see DEPLOY.md
+test_parity.py          proves online emails render exactly like local ones
+cover_pdf.py            turns a cover letter into the attached PDF
 config.json             your credentials (git-ignored)
 config.example.json     template to copy if config.json is ever lost
 jobs.csv                your queue — edit this
 templates/
-  application.txt       default email
-  short.txt             shorter variant
+  application.json      default email
+  short.json            shorter variant
+  general.json          for rows with no company name ("no_company": true)
+covers/
+  standard.json         cover letter, attached as a PDF
+resumes/                your resumes (git-ignored): main.json points at your PDF
 previews/               dry-run output
 sent_log.csv            append-only record of everything sent
 ```

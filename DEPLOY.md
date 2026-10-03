@@ -1,103 +1,116 @@
 # Deploying to Vercel
 
-The whole app runs on Vercel: a static page in `public/`, Python serverless functions in
-`api/`, and an Upstash Redis database added through the Vercel dashboard. Nothing else.
+The online version is the same app as the one on your Mac — Queue with tick boxes, Email,
+Cover letter, Resume, Sent log, Setup — and every email goes out with your **resume and
+cover letter attached as PDFs**. It runs as one Python function (`api/app.py`) plus the
+page in `public/`, with an Upstash Redis database for your data. Nothing else.
 
 ---
 
-## 1. Get the code to Vercel
+## 1. Get the code to GitHub
 
-The project is not a git repository yet:
+The repo already points at `https://github.com/ousaf66/job_applier.git`.
 
 ```bash
 cd ~/personal_projects/job_apply_bot
-git init
 git add -A
-git commit -m "Job application mailer"
-```
-
-Create an **empty private** repo on github.com, then:
-
-```bash
-git remote add origin https://github.com/<you>/job_apply_bot.git
+git commit -m "Online version: covers, resumes, per-row picks, select-to-send"
 git push -u origin main
 ```
 
-At vercel.com: **Add New → Project → Import** that repo. Take every default and deploy.
-The first deploy will show an error page — that is expected until step 2 and 3 are done.
+Keep the repo **private** — `jobs.csv` and the seed files hold your queue and details.
+`config.json` (your Gmail app password) is excluded by `.gitignore` and `.vercelignore`
+and never leaves this Mac.
 
-`config.json` and your local `jobs.csv` are excluded by both `.gitignore` and
-`.vercelignore`, so your Gmail app password never leaves this Mac.
+## 2. Import it into Vercel
 
-## 2. Add the database
+vercel.com → **Add New → Project → Import** `job_applier`. Take every default and deploy.
+The first deploy shows an error page — expected, until steps 3 and 4 are done.
+
+## 3. Add the database
 
 In the project: **Storage → Create Database → Upstash for Redis → Connect**.
+That injects `KV_REST_API_URL` and `KV_REST_API_TOKEN` automatically.
 
-That injects `KV_REST_API_URL` and `KV_REST_API_TOKEN` automatically. Nothing to copy.
-
-## 3. Add four environment variables
+## 4. Add four environment variables
 
 **Settings → Environment Variables**, all environments:
 
 | Name | Value |
 |---|---|
 | `GMAIL_ADDRESS` | `yousaf.hasan66@gmail.com` |
-| `GMAIL_APP_PASSWORD` | the 16-character Google App Password |
-| `UI_PASSWORD` | a long password you invent — this is your login |
+| `GMAIL_APP_PASSWORD` | the 16-letter Google App Password (spaces don't matter) |
+| `UI_PASSWORD` | a long password you invent — this is your login to the page |
 | `SESSION_SECRET` | any long random string |
 
-Then **Deployments → ⋯ → Redeploy**. Environment variables only apply to builds that
-come after them.
+Then **Deployments → ⋯ → Redeploy**. Variables only apply to builds made after them.
 
-## 4. First run
+## 5. First run — in this order
 
-Open your `*.vercel.app` URL and log in with `UI_PASSWORD`.
+Open your `*.vercel.app` link and log in with `UI_PASSWORD`.
 
-1. **Setup tab** — every row should read OK. Upload your resume PDF (it goes into the
-   database, not the repo). Fill in your name, phone, LinkedIn, GitHub.
-2. **Queue tab** — your five companies are already there, seeded from `jobs.csv`.
-3. **Dry run** → read a couple of previews.
-4. **Send test to myself** → check the attachment opens.
-5. **Send for real.**
+1. **Setup** — type your name, phone, LinkedIn, GitHub. Save. (The Gmail address and app
+   password show as "set in Vercel" — they come from step 4.)
+2. **Resume** — **+ Add resume**, pick your PDF (up to 700 KB), Save. It becomes the Default.
+3. **Cover letter** — open **Standard cover letter**, check the preview, press **Make
+   default** so it's attached to every email. (Skip this to send without one.)
+4. **Email** — your three emails are already there: two for rows *with* a company name, one
+   for rows *without*. Edit them if you like.
+5. **Queue** — your queue is already there. **Send yourself a test first:** add a row with
+   your own Gmail address, tick only that row, press **Send 1 selected**, and check the
+   email arrives with both PDFs and that they open.
+6. Then tick the real rows and send.
 
----
+## How sending works here
 
-## Things that are different from the local version
+- **Keep the tab open while sending.** A serverless function can't sleep 45 seconds between
+  emails, so the page sends one email per request and does the waiting itself. Close the
+  tab and it stops where it is; sent rows stay marked **sent**, the rest stay ticked-able.
+  **Stop after this email** is there if you change your mind.
+- A failed send leaves the row unsent, records the reason in the Sent log, and stops the
+  batch so you can read it.
+- The same address + company is never mailed twice.
 
-**Keep the tab open while sending.** A serverless function cannot sleep for 45 seconds
-between emails — it would be killed. So the browser sends one email per request and does
-the waiting itself. Close the tab and the batch stops where it is; already-sent rows stay
-marked sent, so restarting picks up where it left off.
+## Your data
 
-**Your data lives in Redis, not in files.** The queue, the sent log, the templates and the
-resume are all in the database. `jobs.csv` in the repo is only a seed for the very first
-request.
+Everything you change online — queue, emails, covers, resumes, settings, sent log — lives in
+Redis, **not** in the repo. The files in `api/assets/` (`jobs.seed.csv`, `templates/`,
+`covers/`) are only the starting data, copied in on the very first request. Changing them
+later does nothing to an app that's already running. The local app and the online app have
+**separate** data; they don't sync.
 
-**Secrets live in Vercel, not in the app.** The Setup tab shows whether `GMAIL_APP_PASSWORD`
-is set but can never display or change it. To change it, edit the environment variable and
-redeploy.
+## Changing the code later
 
-**A failed send parks the row as `failed`** rather than retrying forever. Set it back to
-blank in the Queue tab to try again.
+`public/index.html` is a copy of `web/index.html`, and `api/_cover_pdf.py` a copy of
+`cover_pdf.py`. After editing either original:
+
+```bash
+cp web/index.html public/index.html
+cp cover_pdf.py api/_cover_pdf.py
+python3 test_parity.py        # must end with ALL IDENTICAL
+```
+
+`test_parity.py` also proves the online emails render exactly like the local ones.
 
 ## If sending fails with a connection error
 
-Gmail SMTP over port 465 usually works from Vercel, but it is the one part of this that
-cannot be verified without deploying. If every send times out, the platform is blocking
-outbound SMTP. The code already has a fallback that sends over HTTPS instead — set two
-more environment variables and redeploy:
+Gmail SMTP on port 465 normally works from Vercel, but this is the one thing that can't be
+checked without deploying. If every send times out, the platform is blocking outbound SMTP.
+The code has a fallback that sends over HTTPS instead (with both attachments) — add two
+environment variables and redeploy:
 
 | Name | Value |
 |---|---|
 | `RESEND_API_KEY` | an API key from resend.com |
 | `RESEND_FROM` | `you@yourdomain.com` |
 
-The catch: Resend will not let you send *as* a gmail.com address. You need a domain you
-own and have verified with them. Applications would arrive from that domain, with your
-Gmail set as the reply-to.
+Resend won't send *as* a gmail.com address — you need a domain you own and have verified
+with them. Applications then arrive from that domain, with your Gmail as the reply-to.
 
 ## Limits worth knowing
 
-- Hobby plan functions cap at 60 seconds. One email takes a few seconds, so this is fine.
-- Gmail allows roughly 500 messages a day; 25–30, spaced out, is the safe pace.
+- Resume PDFs are capped at 700 KB each (Upstash's request limit). Yours is about 146 KB.
+- Hobby-plan functions run up to 60 seconds; one email takes a few seconds.
+- Gmail allows roughly 500 messages a day; 25–30, spaced out, is the safe pace. The page
+  sends at most 25 per press.
 - Upstash's free tier is far more than this app will ever use.

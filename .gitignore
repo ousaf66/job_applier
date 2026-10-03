@@ -4,3 +4,5 @@ previews/
 *.tmp
 .ui_url
 __pycache__/
+resumes/
+.DS_Store
