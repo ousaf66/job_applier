@@ -385,7 +385,9 @@ function show(name) {
 
 /* ---------- state ---------- */
 async function refresh() {
+  const unsaved = dirty ? S.jobs : null;       // queue edits not saved yet must survive a reload of the data
   S = await api("/api/state");
+  if (unsaved) S.jobs = unsaved;
   renderPills(); renderJobs(); renderSendBar(); renderLog(); renderDocs(); renderResumes(); renderSetup();
 }
 
@@ -507,6 +509,8 @@ $("jobsBody").addEventListener("input", (e) => {
   if (["email", "company", "status"].includes(el.dataset.f)) syncPick(+el.dataset.i);
 });
 $("jobsBody").addEventListener("change", (e) => {
+  const pick = e.target.closest("select[data-f]");               // choosing a status / email / cover / resume saves too
+  if (pick) { saveQueue(true); return; }
   const cb = e.target.closest("[data-pick]"); if (!cb) return;
   const k = rowKey(S.jobs[+cb.dataset.pick]);
   if (cb.checked) PICKED.add(k); else PICKED.delete(k);
@@ -527,6 +531,7 @@ $("jobsBody").addEventListener("click", (e) => {
   if (confirm("Delete " + (S.jobs[i].company || S.jobs[i].email || "this row") + " from the queue?")) {
     S.jobs.splice(i, 1); dirty = true; renderJobs(); renderSendBar();
     $("saveJobs").textContent = "Save queue •";
+    saveQueue(true).then((ok) => ok && toast("Deleted"));        // a deletion is saved straight away
   }
 });
 $("addRow").onclick = () => {
