@@ -1209,8 +1209,7 @@ function takeKey() {
   } catch (e) { return ""; }
 }
 async function autoLogin() {
-  const key = takeKey();
-  if (!key) return false;
+  const key = takeKey();          // no key is fine: an open site signs anyone in, a locked one refuses
   try {
     const r = await fetch(route("/api/login"), { method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ password: key }) });
@@ -1221,7 +1220,7 @@ async function autoLogin() {
 }
 function showLocked() {
   document.body.innerHTML = ONLINE
-    ? "<main><div class=\"card\"><h2>This page is private</h2><p class=\"hint\">Open your private link " +
+    ? "<main><div class=\"card\"><h2>This page is locked</h2><p class=\"hint\">Open your private link " +
       "(the one ending in <code>?k=…</code>) once on this device. After that this address opens straight away.</p></div></main>"
     : "<main><div class=\"card\"><h2>Open the link printed in your terminal</h2><p class=\"hint\">The server " +
       "was restarted or this tab is stale. Run <code>python3 web_ui.py</code> and use the link it prints.</p></div></main>";

@@ -39,7 +39,7 @@ ROUTES = {
     ("POST", "resume/use"): core.use_resume,
     ("GET", "resume/file"): core.resume_file,
 }
-OPEN_ROUTES = {"login"}                     # everything else needs a valid token
+OPEN_ROUTES = {"login"}                     # everything else needs a valid token — if UI_PASSWORD is set
 
 
 class handler(BaseHTTPRequestHandler):
@@ -60,7 +60,8 @@ class handler(BaseHTTPRequestHandler):
         fn = ROUTES.get((self.command, route))
         if fn is None:
             return self._reply({"error": "not found"}, 404)
-        if route not in OPEN_ROUTES and not core.valid_token(self.headers.get("X-Token") or ""):
+        if (route not in OPEN_ROUTES and core.ui_password()
+                and not core.valid_token(self.headers.get("X-Token") or "")):
             return self._reply({"error": "not logged in"}, 403)
         try:
             if self.command == "GET":

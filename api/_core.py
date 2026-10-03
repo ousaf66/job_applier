@@ -485,10 +485,11 @@ def valid_token(token):
 
 
 def check_login(password):
+    """With no UI_PASSWORD set the page is open to anyone who has its address. Setting one
+    in Vercel locks it again (then it is opened once with /?k=<UI_PASSWORD>)."""
     stored = ui_password()
     if not stored:
-        raise Abort("UI_PASSWORD is not set in your Vercel environment variables. "
-                    "Without it anyone could open this page and send email as you.")
+        return make_token()
     if not hmac.compare_digest(stored.encode("utf-8"), str(password or "").encode("utf-8")):
         return None
     return make_token()

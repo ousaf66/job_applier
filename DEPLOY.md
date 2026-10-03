@@ -32,7 +32,7 @@ The first deploy shows an error page — expected, until steps 3 and 4 are done.
 In the project: **Storage → Create Database → Upstash for Redis → Connect**.
 That injects `KV_REST_API_URL` and `KV_REST_API_TOKEN` automatically.
 
-## 4. Add four environment variables
+## 4. Add three environment variables
 
 **Settings → Environment Variables**, all environments:
 
@@ -40,14 +40,19 @@ That injects `KV_REST_API_URL` and `KV_REST_API_TOKEN` automatically.
 |---|---|
 | `GMAIL_ADDRESS` | `yousaf.hasan66@gmail.com` |
 | `GMAIL_APP_PASSWORD` | the 16-letter Google App Password (spaces don't matter) |
-| `UI_PASSWORD` | a long random key (letters and digits only) — it is the secret in your private link, never typed anywhere |
 | `SESSION_SECRET` | any long random string |
 
 Then **Deployments → ⋯ → Redeploy**. Variables only apply to builds made after them.
 
 ## 5. First run — in this order
 
-There is no login box. Open your private link **once on each device**:
+There is no login: **anyone who has your `*.vercel.app` address can use the page** — send email
+from your Gmail, and see your resume, phone number and queue. Keep the address to yourself, or
+lock it (next paragraph). To open it, just go to the address.
+
+**To lock it again** later, add an environment variable `UI_PASSWORD` (a long key, letters and
+digits only) and redeploy. The page then shows "This page is locked" until you open your private
+link **once on each device**:
 
 ```
 https://<your-project>.vercel.app/?k=<UI_PASSWORD>
