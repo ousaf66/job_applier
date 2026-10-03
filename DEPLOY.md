@@ -40,14 +40,22 @@ That injects `KV_REST_API_URL` and `KV_REST_API_TOKEN` automatically.
 |---|---|
 | `GMAIL_ADDRESS` | `yousaf.hasan66@gmail.com` |
 | `GMAIL_APP_PASSWORD` | the 16-letter Google App Password (spaces don't matter) |
-| `UI_PASSWORD` | a long password you invent — this is your login to the page |
+| `UI_PASSWORD` | a long random key (letters and digits only) — it is the secret in your private link, never typed anywhere |
 | `SESSION_SECRET` | any long random string |
 
 Then **Deployments → ⋯ → Redeploy**. Variables only apply to builds made after them.
 
 ## 5. First run — in this order
 
-Open your `*.vercel.app` link and log in with `UI_PASSWORD`.
+There is no login box. Open your private link **once on each device**:
+
+```
+https://<your-project>.vercel.app/?k=<UI_PASSWORD>
+```
+
+The page keeps the key in that browser and removes it from the address bar, so from then on the
+plain `https://<your-project>.vercel.app` opens straight away. Anyone without the key sees only
+"This page is private" — the address alone can't send email as you. Don't share the link.
 
 1. **Setup** — type your name, phone, LinkedIn, GitHub. Save. (The Gmail address and app
    password show as "set in Vercel" — they come from step 4.)

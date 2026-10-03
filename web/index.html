@@ -98,15 +98,7 @@ pre{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:
   padding-top:16px;border-top:1px solid var(--line)}
 .runbar .muted{flex:1;min-width:150px;font-size:12.5px}
 #sendBox{margin-top:14px}
-#login{position:fixed;inset:0;background:var(--bg);display:none;align-items:center;
-  justify-content:center;z-index:50;padding:24px}
-#login.show{display:flex}
-#login form{background:var(--card);border:1px solid var(--line);border-radius:12px;
-  padding:26px;width:100%;max-width:350px;box-shadow:var(--shadow)}
-#login h2{margin:0 0 4px;font-size:16px}
-#login input{margin:14px 0 12px}
-#login button{width:100%}
-#loginErr{color:var(--bad);min-height:18px;margin:10px 0 0}
+
 .sendhead{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:13px}
 /* sent log */
 .filters{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
@@ -182,20 +174,9 @@ svg.i{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke
 </head>
 <body>
 
-<div id="login">
-  <form id="loginForm">
-    <h2>Job Application Mailer</h2>
-    <p class="hint">Enter your login password.</p>
-    <input id="loginPw" type="password" autocomplete="current-password" placeholder="Password">
-    <button class="btn primary" type="submit">Log in</button>
-    <p class="hint" id="loginErr"></p>
-  </form>
-</div>
-
 <header>
   <div class="hrow">
     <h1>Job Application Mailer <span>nothing is sent until you press Send</span></h1>
-    <button class="btn" id="logout" hidden>Log out</button>
   </div>
   <div class="pills" id="pills"></div>
 </header>
@@ -346,20 +327,25 @@ let pvTimer = null, pdfUrl = "", savedRange = null, LOGRANGE = "all";
 let RDRAFT = null, resumeUrl = "";  // the open resume, with unsaved edits
 const PVMODE = { email: "html", cover: "page" };
 
-async function api(path, body) {
+async function request(path, body) {
   const opts = { headers: { "X-Token": TOK, "Content-Type": "application/json" } };
   if (body !== undefined) { opts.method = "POST"; opts.body = JSON.stringify(body); }
-  const r = await fetch(route(path), opts);
+  let r = await fetch(route(path), opts);
+  if (r.status === 403 && ONLINE && await autoLogin()) {      // session ran out: sign in again, once
+    opts.headers["X-Token"] = TOK;
+    r = await fetch(route(path), opts);
+  }
   if (r.status === 403) { denied(); throw new Error("Please log in"); }
+  return r;
+}
+async function api(path, body) {
+  const r = await request(path, body);
   const j = await r.json().catch(() => ({ error: "bad response" }));
   if (j.error) throw new Error(j.error);
   return j;
 }
 async function apiBlob(path, body) {
-  const opts = { headers: { "X-Token": TOK, "Content-Type": "application/json" } };
-  if (body !== undefined) { opts.method = "POST"; opts.body = JSON.stringify(body); }
-  const r = await fetch(route(path), opts);
-  if (r.status === 403) { denied(); throw new Error("Please log in"); }
+  const r = await request(path, body);
   if (!r.ok) { const j = await r.json().catch(() => ({})); throw new Error(j.error || "HTTP " + r.status); }
   return r.blob();
 }
@@ -1207,41 +1193,48 @@ $("saveCfg").onclick = async () => {
 };
 
 /* ---------- access ---------- */
-const denied = () => (ONLINE ? showLogin() : showLocked());
-function showLogin() {
-  TOK = ""; sessionStorage.removeItem("jm_token");
-  $("login").classList.add("show"); $("logout").hidden = true;
-  setTimeout(() => $("loginPw").focus(), 50);
+const denied = () => showLocked();
+// Online there is no password box. Open your private link (…/?k=KEY) once on a device and the
+// page keeps the key, signing in quietly whenever it needs to.
+const KEY_STORE = "jm_key";
+function takeKey() {
+  try {
+    const u = new URL(location.href), k = u.searchParams.get("k");
+    if (k) {
+      localStorage.setItem(KEY_STORE, k);
+      u.searchParams.delete("k");
+      history.replaceState(null, "", u.pathname + u.search + u.hash);   // keep the key out of the address bar
+    }
+    return localStorage.getItem(KEY_STORE) || "";
+  } catch (e) { return ""; }
 }
-$("loginForm").addEventListener("submit", async (e) => {
-  e.preventDefault();
-  $("loginErr").textContent = "";
-  const r = await fetch(route("/api/login"), { method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ password: $("loginPw").value }) });
-  const j = await r.json().catch(() => ({ error: "bad response" }));
-  if (j.token) {
-    TOK = j.token; sessionStorage.setItem("jm_token", TOK);
-    $("loginPw").value = ""; $("login").classList.remove("show"); $("logout").hidden = false;
-    refresh().catch((err) => { if (err.message !== "Please log in") toast(err.message); });
-  } else { $("loginErr").textContent = j.error || "Wrong password"; }
-});
-$("logout").onclick = () => { if (!RUNNING) showLogin(); };
+async function autoLogin() {
+  const key = takeKey();
+  if (!key) return false;
+  try {
+    const r = await fetch(route("/api/login"), { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password: key }) });
+    const j = await r.json().catch(() => ({}));
+    if (j.token) { TOK = j.token; return true; }
+  } catch (e) { /* offline: treated as locked below */ }
+  return false;
+}
 function showLocked() {
-  document.body.innerHTML = "<main><div class=\"card\"><h2>Open the link printed in your " +
-    "terminal</h2><p class=\"hint\">The server was restarted or this tab is stale. Run " +
-    "<code>python3 web_ui.py</code> and use the link it prints.</p></div></main>";
+  document.body.innerHTML = ONLINE
+    ? "<main><div class=\"card\"><h2>This page is private</h2><p class=\"hint\">Open your private link " +
+      "(the one ending in <code>?k=…</code>) once on this device. After that this address opens straight away.</p></div></main>"
+    : "<main><div class=\"card\"><h2>Open the link printed in your terminal</h2><p class=\"hint\">The server " +
+      "was restarted or this tab is stale. Run <code>python3 web_ui.py</code> and use the link it prints.</p></div></main>";
 }
 
 /* ---------- start ---------- */
 (async function boot() {
   if (!ONLINE) sessionStorage.setItem("jm_token", BOOT);
-  TOK = sessionStorage.getItem("jm_token") || "";
-  if (!TOK) return denied();
+  TOK = ONLINE ? "" : sessionStorage.getItem("jm_token") || "";
+  if (ONLINE ? !(await autoLogin()) : !TOK) return denied();
   try {
     await refresh();
-    if (ONLINE) $("logout").hidden = false;
-    else if ((await api("/api/run")).active) watchSend();   // a send still going after a reload
+    if (!ONLINE && (await api("/api/run")).active) watchSend();   // a send still going after a reload
   } catch (e) { if (e.message !== "Please log in") toast("Could not load: " + e.message); }
 })();
 </script>
