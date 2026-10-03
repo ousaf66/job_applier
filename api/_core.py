@@ -70,6 +70,13 @@ def _kv_credentials():
     return (url or "").rstrip("/"), token or ""
 
 
+def no_storage_message():
+    seen = sorted(n for n in os.environ if any(w in n.upper() for w in ("REST", "KV_", "REDIS", "UPSTASH", "STORAGE")))
+    return ("No storage connected. In the Vercel dashboard open Storage, connect the Upstash Redis "
+            "database to this project, then redeploy. Redis-related settings this deployment can see "
+            "(names only): " + (", ".join(seen) or "none") + ".")
+
+
 def storage_ready():
     url, token = _kv_credentials()
     return bool(url and token)
@@ -78,8 +85,7 @@ def storage_ready():
 def kv(*command):
     url, token = _kv_credentials()
     if not url or not token:
-        raise Abort("No storage connected. In the Vercel dashboard open Storage, create an "
-                    "Upstash Redis database and connect it to this project, then redeploy.")
+        raise Abort(no_storage_message())
     request = urllib.request.Request(
         url,
         data=json.dumps([str(c) for c in command]).encode("utf-8"),
@@ -498,8 +504,7 @@ def config_state(stored, resumes):
 
 def state(_payload=None):
     if not storage_ready():
-        raise Abort("No storage connected. In the Vercel dashboard open Storage, create an Upstash "
-                    "Redis database and connect it to this project, then redeploy.")
+        raise Abort(no_storage_message())
     stored = get_config()
     rows, tpls, covers, resumes, log = get_jobs(), get_templates(), get_covers(), get_resumes(), get_log()
     seen = sent_pairs(log)
