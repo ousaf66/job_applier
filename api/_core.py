@@ -9,24 +9,23 @@ Serverless changes three things:
   2. There is no long-running process. A function that slept 45 seconds between emails
      would be killed, so /api/send sends exactly ONE email per request and the browser
      paces the batch. Keep the tab open while sending.
-  3. There are no secrets on disk. The Gmail app password and the login password come
-     from Vercel environment variables.
+  3. There are no secrets on disk. Everything you save lives in Redis.
 
 Standard library only — no requirements.txt needed. The email rendering is shared with
 the local version (see _mailcore.py).
+
+There is no login: the page is open to anyone who has its address. The Gmail address and app
+password are saved from the Setup tab (in Redis) and are never sent back to the page.
 """
 
 import base64
 import csv
-import hashlib
-import hmac
 import io
 import json
 import os
 import re
 import smtplib
 import ssl
-import time
 import urllib.error
 import urllib.request
 from datetime import datetime, timedelta
@@ -34,14 +33,13 @@ from email.message import EmailMessage
 from pathlib import Path
 
 import _cover_pdf as cover_pdf
-from _mailcore import (PLACEHOLDERS, check, cover_filename, email_html, html_to_text, label,
+from _mailcore import (EMAIL_RE, PLACEHOLDERS, check, cover_filename, email_html, html_to_text, label,
                        render_body, render_cover, render_subject, template_problem)
 
 ASSETS = Path(__file__).resolve().parent / "assets"
 JOB_FIELDS = ["company", "role", "contact_name", "email", "template", "cover", "resume",
               "source", "job_url", "location", "notes", "status", "sent_at"]
 CONFIG_FIELDS = ["sender_name", "reply_to", "phone", "linkedin", "github", "portfolio"]
-SESSION_TTL = 12 * 3600
 MAX_RESUME_BYTES = 700 * 1024          # Upstash caps a request at about 1 MB, base64 included
 GENERAL_TEMPLATE = "general.json"
 DEFAULT_TEMPLATE = "application.json"
@@ -353,20 +351,21 @@ def build_message(row, cfg, tpl, resume, cover=None, to_addr=None, now=None):
 # --------------------------------------------------------------------------- #
 
 def smtp_send(msg, cfg):
-    password = "".join(os.environ.get("GMAIL_APP_PASSWORD", "").split())
+    password = cfg.get("app_password") or ""
     if not password:
-        raise Abort("GMAIL_APP_PASSWORD is not set in your Vercel environment variables.")
+        raise Abort("No Gmail app password yet — add it on the Setup tab.")
     if not password.isascii():
-        raise Abort("GMAIL_APP_PASSWORD has characters in it that are not plain letters. "
-                    "Paste the 16 letters again in Vercel.")
+        raise Abort("The app password has characters in it that are not plain letters. "
+                    "Paste the 16 letters again on the Setup tab.")
     context = ssl.create_default_context()
     try:
         with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context, timeout=25) as server:
             server.login(cfg["sender_email"], password)
             server.send_message(msg)
     except smtplib.SMTPAuthenticationError:
-        raise Abort("Gmail rejected the login. GMAIL_APP_PASSWORD must be a 16-character Google "
-                    "App Password belonging to GMAIL_ADDRESS, with 2-Step Verification on.")
+        raise Abort("Gmail rejected the login. The app password on the Setup tab must be a "
+                    "16-character Google App Password for that Gmail address, with 2-Step "
+                    "Verification on.")
     except (OSError, smtplib.SMTPException) as exc:
         raise Abort("Could not send through Gmail SMTP from Vercel (%s). If this keeps happening "
                     "the platform is blocking the connection — set RESEND_API_KEY and "
@@ -408,9 +407,17 @@ def deliver(msg, cfg):
     return smtp_send(msg, cfg)
 
 
+def squash(text):
+    """Google shows the app password in groups of four; a copy can carry spaces of any kind."""
+    return "".join(str(text or "").split())
+
+
 def sender_config(stored):
+    """Settings saved on the Setup tab; GMAIL_ADDRESS / GMAIL_APP_PASSWORD in Vercel still
+    work as a fallback. Includes the app password — never send this to the page."""
     cfg = {k: str(stored.get(k) or "") for k in CONFIG_FIELDS}
-    cfg["sender_email"] = os.environ.get("GMAIL_ADDRESS", "").strip()
+    cfg["sender_email"] = (stored.get("sender_email") or os.environ.get("GMAIL_ADDRESS", "")).strip()
+    cfg["app_password"] = squash(stored.get("app_password") or os.environ.get("GMAIL_APP_PASSWORD", ""))
     return cfg
 
 
@@ -423,7 +430,7 @@ def send_one(payload):
     stored = get_config()
     cfg = sender_config(stored)
     if not cfg["sender_email"]:
-        raise Abort("GMAIL_ADDRESS is not set in your Vercel environment variables.")
+        raise Abort("Fill in your Gmail address on the Setup tab first.")
     if not cfg["sender_name"]:
         raise Abort("Fill in your name on the Setup tab first.")
     rows, tpls, covers, resumes = get_jobs(), get_templates(), get_covers(), get_resumes()
@@ -456,68 +463,21 @@ def send_one(payload):
 
 
 # --------------------------------------------------------------------------- #
-# login — stateless signed tokens, because there is no server memory
-# --------------------------------------------------------------------------- #
-
-def ui_password():
-    return os.environ.get("UI_PASSWORD", "")
-
-
-def _secret():
-    return (os.environ.get("SESSION_SECRET") or ui_password() or "unset").encode("utf-8")
-
-
-def make_token(ttl=SESSION_TTL):
-    expiry = str(int(time.time() + ttl))
-    signature = hmac.new(_secret(), expiry.encode("ascii"), hashlib.sha256).hexdigest()[:40]
-    return expiry + "." + signature
-
-
-def valid_token(token):
-    try:
-        expiry, signature = str(token).split(".", 1)
-        if int(expiry) < time.time():
-            return False
-    except (ValueError, AttributeError):
-        return False
-    expected = hmac.new(_secret(), expiry.encode("ascii"), hashlib.sha256).hexdigest()[:40]
-    return hmac.compare_digest(expected, signature)
-
-
-def check_login(password):
-    """With no UI_PASSWORD set the page is open to anyone who has its address. Setting one
-    in Vercel locks it again (then it is opened once with /?k=<UI_PASSWORD>)."""
-    stored = ui_password()
-    if not stored:
-        return make_token()
-    if not hmac.compare_digest(stored.encode("utf-8"), str(password or "").encode("utf-8")):
-        return None
-    return make_token()
-
-
-def login(payload):
-    token = check_login(payload.get("password"))
-    if not token:
-        raise Abort("Wrong password")
-    return {"token": token}
-
-
-# --------------------------------------------------------------------------- #
 # what the page loads on every refresh
 # --------------------------------------------------------------------------- #
 
 def config_state(stored, resumes):
     cfg = sender_config(stored)
-    out = dict(cfg)
-    out["has_password"] = bool(os.environ.get("GMAIL_APP_PASSWORD")) or bool(
+    out = {k: v for k, v in cfg.items() if k != "app_password"}      # the password stays here
+    out["has_password"] = bool(cfg["app_password"]) or bool(
         os.environ.get("RESEND_API_KEY") and os.environ.get("RESEND_FROM"))
     missing = []
     if not cfg["sender_email"]:
-        missing.append("GMAIL_ADDRESS (in Vercel)")
+        missing.append("your Gmail address (Setup tab)")
     if not cfg["sender_name"]:
         missing.append("your name (Setup tab)")
     if not out["has_password"]:
-        missing.append("GMAIL_APP_PASSWORD (in Vercel)")
+        missing.append("the Gmail app password (Setup tab)")
     if not resumes:
         missing.append("a resume (Resume tab)")
     out["missing"] = missing
@@ -567,6 +527,16 @@ def save_settings(patch):
     for key in CONFIG_FIELDS:
         if key in patch:
             stored[key] = str(patch[key]).strip()
+    if "sender_email" in patch:
+        email = str(patch["sender_email"]).strip()
+        if email and not EMAIL_RE.match(email):
+            raise Abort("That Gmail address doesn't look right.")
+        stored["sender_email"] = email
+    password = squash(patch.get("app_password"))
+    if password:                              # blank means "keep the saved one"
+        if not password.isascii():
+            raise Abort("That app password has characters in it that are not plain letters.")
+        stored["app_password"] = password
     save_config(stored)
     return {"ok": True}
 

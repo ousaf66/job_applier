@@ -32,38 +32,21 @@ The first deploy shows an error page — expected, until steps 3 and 4 are done.
 In the project: **Storage → Create Database → Upstash for Redis → Connect**.
 That injects `KV_REST_API_URL` and `KV_REST_API_TOKEN` automatically.
 
-## 4. Add three environment variables
+## 4. Redeploy
 
-**Settings → Environment Variables**, all environments:
-
-| Name | Value |
-|---|---|
-| `GMAIL_ADDRESS` | `yousaf.hasan66@gmail.com` |
-| `GMAIL_APP_PASSWORD` | the 16-letter Google App Password (spaces don't matter) |
-| `SESSION_SECRET` | any long random string |
-
-Then **Deployments → ⋯ → Redeploy**. Variables only apply to builds made after them.
+Nothing to add: the Gmail address and app password are typed into the **Setup** tab and saved
+in the database. (`GMAIL_ADDRESS` / `GMAIL_APP_PASSWORD` in Vercel still work as a fallback until
+you save your own on the Setup tab. `UI_PASSWORD` and `SESSION_SECRET` are no longer used — delete
+them.) After connecting Redis: **Deployments → ⋯ → Redeploy**.
 
 ## 5. First run — in this order
 
 There is no login: **anyone who has your `*.vercel.app` address can use the page** — send email
-from your Gmail, and see your resume, phone number and queue. Keep the address to yourself, or
-lock it (next paragraph). To open it, just go to the address.
+from your Gmail, replace your saved Gmail settings, and see your resume, phone number and queue.
+Keep the address to yourself.
 
-**To lock it again** later, add an environment variable `UI_PASSWORD` (a long key, letters and
-digits only) and redeploy. The page then shows "This page is locked" until you open your private
-link **once on each device**:
-
-```
-https://<your-project>.vercel.app/?k=<UI_PASSWORD>
-```
-
-The page keeps the key in that browser and removes it from the address bar, so from then on the
-plain `https://<your-project>.vercel.app` opens straight away. Anyone without the key sees only
-"This page is private" — the address alone can't send email as you. Don't share the link.
-
-1. **Setup** — type your name, phone, LinkedIn, GitHub. Save. (The Gmail address and app
-   password show as "set in Vercel" — they come from step 4.)
+1. **Setup** — type your name, **Gmail address and Google app password**, phone, LinkedIn,
+   GitHub. Save. (The password is never shown again; leave it blank later to keep it.)
 2. **Resume** — **+ Add resume**, pick your PDF (up to 700 KB), Save. It becomes the Default.
 3. **Cover letter** — open **Standard cover letter**, check the preview, press **Make
    default** so it's attached to every email. (Skip this to send without one.)

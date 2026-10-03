@@ -2,7 +2,7 @@
 The one serverless function behind the whole online app.
 
 The page calls /api/app?r=<route> (for example /api/app?r=template/preview), so there is
-no URL rewriting to get wrong. Every route returns JSON, except the two PDF ones.
+no URL rewriting to get wrong. Every route returns JSON, except the two PDF ones. There is no login.
 """
 
 import json
@@ -18,7 +18,6 @@ from _core import Abort
 # (method, route) -> function(payload). A function returns a dict (sent as JSON) or a
 # (bytes, content-type) pair (sent as a file).
 ROUTES = {
-    ("POST", "login"): core.login,
     ("GET", "state"): core.state,
     ("POST", "config"): core.save_settings,
     ("POST", "jobs"): core.save_jobs,
@@ -39,7 +38,6 @@ ROUTES = {
     ("POST", "resume/use"): core.use_resume,
     ("GET", "resume/file"): core.resume_file,
 }
-OPEN_ROUTES = {"login"}                     # everything else needs a valid token — if UI_PASSWORD is set
 
 
 class handler(BaseHTTPRequestHandler):
@@ -60,9 +58,6 @@ class handler(BaseHTTPRequestHandler):
         fn = ROUTES.get((self.command, route))
         if fn is None:
             return self._reply({"error": "not found"}, 404)
-        if (route not in OPEN_ROUTES and core.ui_password()
-                and not core.valid_token(self.headers.get("X-Token") or "")):
-            return self._reply({"error": "not logged in"}, 403)
         try:
             if self.command == "GET":
                 payload = query

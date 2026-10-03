@@ -330,11 +330,7 @@ const PVMODE = { email: "html", cover: "page" };
 async function request(path, body) {
   const opts = { headers: { "X-Token": TOK, "Content-Type": "application/json" } };
   if (body !== undefined) { opts.method = "POST"; opts.body = JSON.stringify(body); }
-  let r = await fetch(route(path), opts);
-  if (r.status === 403 && ONLINE && await autoLogin()) {      // session ran out: sign in again, once
-    opts.headers["X-Token"] = TOK;
-    r = await fetch(route(path), opts);
-  }
+  const r = await fetch(route(path), opts);
   if (r.status === 403) { denied(); throw new Error("Please log in"); }
   return r;
 }
@@ -1165,20 +1161,11 @@ function renderSetup() {
   SETUP_FIELDS.forEach((k) => ($("c_" + k).value = c[k] || ""));
   $("c_app_password").placeholder = c.has_password ? "•••••••••••••••• saved" : "not set yet";
   $("c_app_password").value = "";
-  if (ONLINE) $("setupWhere").textContent = "Saved in your online database.";
-  if (ONLINE) {                      // these two come from Vercel environment variables
-    $("c_sender_email").disabled = $("c_app_password").disabled = true;
-    $("appPwHint").hidden = true;
-    $("c_app_password").placeholder = c.has_password ? "set in Vercel (GMAIL_APP_PASSWORD)" : "not set — add GMAIL_APP_PASSWORD in Vercel";
-  }
+  if (ONLINE) $("setupWhere").textContent = "Saved in your online database. The app password is never sent back to this page once saved.";
   let note = "";
-  if (ONLINE)
-    note += '<div class="note"><b>Online version.</b> The Gmail address and app password are Vercel ' +
-      "environment variables (<code>GMAIL_ADDRESS</code>, <code>GMAIL_APP_PASSWORD</code>) — change them " +
-      "there, then redeploy. Everything else on this page is saved in your online database.</div>";
   if (!c.has_password)
     note += '<div class="note bad"><b>No app password yet.</b> This is the one thing blocking every ' +
-      (ONLINE ? "send. Add GMAIL_APP_PASSWORD in Vercel." : "send. A normal Gmail password will not work — Google blocks it for SMTP.") + "</div>";
+      "send. A normal Gmail password will not work — Google blocks it for SMTP.</div>";
   if (c.missing.some((m) => m.startsWith("a resume")))
     note += '<div class="note bad"><b>No usable resume yet.</b> Add one on the Resume tab.</div>';
   $("setupNote").innerHTML = note;
@@ -1187,42 +1174,15 @@ $("saveCfg").onclick = async () => {
   const patch = {};
   SETUP_FIELDS.forEach((k) => (patch[k] = $("c_" + k).value));
   const pw = $("c_app_password").value.trim();
-  if (pw && !ONLINE) patch.app_password = pw;
+  if (pw) patch.app_password = pw;
   try { await api("/api/config", patch); await refresh(); toast(ONLINE ? "Saved" : "Saved to config.json"); }
   catch (e) { toast("Could not save: " + e.message); }
 };
 
 /* ---------- access ---------- */
-const denied = () => showLocked();
-// Online there is no password box. Open your private link (…/?k=KEY) once on a device and the
-// page keeps the key, signing in quietly whenever it needs to.
-const KEY_STORE = "jm_key";
-function takeKey() {
-  try {
-    const u = new URL(location.href), k = u.searchParams.get("k");
-    if (k) {
-      localStorage.setItem(KEY_STORE, k);
-      u.searchParams.delete("k");
-      history.replaceState(null, "", u.pathname + u.search + u.hash);   // keep the key out of the address bar
-    }
-    return localStorage.getItem(KEY_STORE) || "";
-  } catch (e) { return ""; }
-}
-async function autoLogin() {
-  const key = takeKey();          // no key is fine: an open site signs anyone in, a locked one refuses
-  try {
-    const r = await fetch(route("/api/login"), { method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ password: key }) });
-    const j = await r.json().catch(() => ({}));
-    if (j.token) { TOK = j.token; return true; }
-  } catch (e) { /* offline: treated as locked below */ }
-  return false;
-}
+const denied = () => showLocked();     // local only: the online page has no login
 function showLocked() {
-  document.body.innerHTML = ONLINE
-    ? "<main><div class=\"card\"><h2>This page is locked</h2><p class=\"hint\">Open your private link " +
-      "(the one ending in <code>?k=…</code>) once on this device. After that this address opens straight away.</p></div></main>"
-    : "<main><div class=\"card\"><h2>Open the link printed in your terminal</h2><p class=\"hint\">The server " +
+  document.body.innerHTML = "<main><div class=\"card\"><h2>Open the link printed in your terminal</h2><p class=\"hint\">The server " +
       "was restarted or this tab is stale. Run <code>python3 web_ui.py</code> and use the link it prints.</p></div></main>";
 }
 
@@ -1230,7 +1190,7 @@ function showLocked() {
 (async function boot() {
   if (!ONLINE) sessionStorage.setItem("jm_token", BOOT);
   TOK = ONLINE ? "" : sessionStorage.getItem("jm_token") || "";
-  if (ONLINE ? !(await autoLogin()) : !TOK) return denied();
+  if (!ONLINE && !TOK) return denied();
   try {
     await refresh();
     if (!ONLINE && (await api("/api/run")).active) watchSend();   // a send still going after a reload
