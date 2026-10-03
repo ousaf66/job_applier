@@ -29,8 +29,10 @@ The first deploy shows an error page — expected, until steps 3 and 4 are done.
 
 ## 3. Add the database
 
-In the project: **Storage → Create Database → Upstash for Redis → Connect**.
-That injects `KV_REST_API_URL` and `KV_REST_API_TOKEN` automatically.
+In the project: **Storage → Create Database →** any Redis (Upstash for Redis, or Redis — the 30 MB
+free plan is plenty) **→ Connect to Project**, leaving the prefix empty. That adds the connection
+settings itself: `KV_REST_API_URL` + `KV_REST_API_TOKEN` (Upstash) or `REDIS_URL` (Redis). The app
+understands both. If the page says "No storage connected", it lists the setting names it can see.
 
 ## 4. Redeploy
 

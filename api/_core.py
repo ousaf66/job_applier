@@ -11,6 +11,9 @@ Serverless changes three things:
      paces the batch. Keep the tab open while sending.
   3. There are no secrets on disk. Everything you save lives in Redis.
 
+Storage is any Redis: Upstash over its REST API (KV_REST_API_URL / KV_REST_API_TOKEN), or a
+plain Redis connection string (REDIS_URL, as Redis Cloud gives you), spoken directly.
+
 Standard library only — no requirements.txt needed. The email rendering is shared with
 the local version (see _mailcore.py).
 
@@ -25,12 +28,14 @@ import json
 import os
 import re
 import smtplib
+import socket
 import ssl
 import urllib.error
 import urllib.request
 from datetime import datetime, timedelta
 from email.message import EmailMessage
 from pathlib import Path
+from urllib.parse import unquote, urlparse
 
 import _cover_pdf as cover_pdf
 from _mailcore import (EMAIL_RE, PLACEHOLDERS, check, cover_filename, email_html, html_to_text, label,
@@ -70,6 +75,15 @@ def _kv_credentials():
     return (url or "").rstrip("/"), token or ""
 
 
+def _redis_url():
+    """A redis:// or rediss:// connection string, as Redis Cloud / Vercel's Redis add (REDIS_URL)."""
+    env = os.environ
+    for name in ["REDIS_URL"] + sorted(n for n in env if n.endswith("REDIS_URL")):
+        if env.get(name, "").startswith(("redis://", "rediss://")):
+            return env[name]
+    return ""
+
+
 def no_storage_message():
     seen = sorted(n for n in os.environ if any(w in n.upper() for w in ("REST", "KV_", "REDIS", "UPSTASH", "STORAGE")))
     return ("No storage connected. In the Vercel dashboard open Storage, connect the Upstash Redis "
@@ -79,12 +93,86 @@ def no_storage_message():
 
 def storage_ready():
     url, token = _kv_credentials()
-    return bool(url and token)
+    return bool(url and token) or bool(_redis_url())
+
+
+# --- Redis over a plain TCP connection (RESP), for REDIS_URL -------------------------------- #
+
+_conn = None            # kept between requests while the function instance stays warm
+
+
+def _encode(command):
+    parts = [str(c).encode("utf-8") for c in command]
+    return b"*%d\r\n" % len(parts) + b"".join(b"$%d\r\n%s\r\n" % (len(x), x) for x in parts)
+
+
+def _read_reply(f):
+    line = f.readline()
+    if not line:
+        raise ConnectionError("the storage server closed the connection")
+    kind, rest = line[:1], line[1:].rstrip(b"\r\n")
+    if kind == b"+":
+        return rest.decode()
+    if kind == b"-":
+        raise Abort("Storage error: %s" % rest.decode("utf-8", "replace"))
+    if kind == b":":
+        return int(rest)
+    if kind == b"$":
+        size = int(rest)
+        if size < 0:
+            return None
+        data = f.read(size + 2)
+        if len(data) != size + 2:
+            raise ConnectionError("the storage server cut the reply short")
+        return data[:-2].decode("utf-8")
+    if kind == b"*":
+        size = int(rest)
+        return None if size < 0 else [_read_reply(f) for _ in range(size)]
+    raise ConnectionError("unexpected reply from storage")
+
+
+def _connect(url):
+    u = urlparse(url)
+    host, port = u.hostname, u.port or 6379
+    sock = socket.create_connection((host, port), timeout=15)
+    if u.scheme == "rediss":
+        sock = ssl.create_default_context().wrap_socket(sock, server_hostname=host)
+    f = sock.makefile("rwb")
+    if u.password:
+        user = [unquote(u.username)] if u.username else []
+        f.write(_encode(["AUTH"] + user + [unquote(u.password)]))
+        f.flush()
+        _read_reply(f)
+    return sock, f
+
+
+def _kv_tcp(url, command):
+    global _conn
+    for attempt in (1, 2):                 # a warm connection may have gone stale: reconnect once
+        try:
+            if _conn is None:
+                _conn = _connect(url)
+            f = _conn[1]
+            f.write(_encode(command))
+            f.flush()
+            return _read_reply(f)
+        except Abort:
+            raise
+        except (OSError, ValueError, ConnectionError) as exc:
+            try:
+                _conn[0].close()
+            except Exception:
+                pass
+            _conn = None
+            if attempt == 2:
+                raise Abort("Could not reach storage: %s" % exc)
 
 
 def kv(*command):
     url, token = _kv_credentials()
     if not url or not token:
+        if _redis_url():
+            return _kv_tcp(_redis_url(), command)
         raise Abort(no_storage_message())
     request = urllib.request.Request(
         url,
