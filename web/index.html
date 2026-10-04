@@ -487,16 +487,19 @@ function pickNames(j) {
           nameOf(S.resumes, j.resume || S.active_resume) || "?"];
 }
 function pickCell(i, f, j) {
-  const v = j[f] || "";
-  const [list, def] = f === "template" ? [S.templates, nameOf(S.templates, defaultTpl(j)) || "none"]
-    : f === "cover" ? [S.covers, nameOf(S.covers, S.active_cover) || "no cover"]
-    : [S.resumes, nameOf(S.resumes, S.active_resume) || "none"];
-  const opts = (xs) => xs.map((x) => opt(x.id, x.name, x.id === v)).join("");
-  const group = (label, xs) => (xs.length ? '<optgroup label="' + label + '">' + opts(xs) + "</optgroup>" : "");
-  let o = opt("", "Default · " + def, !v) + (f === "cover" ? opt("none", "No cover letter", v === "none") : "") +
-    (f === "template" ? group("With company name", list.filter((t) => !t.no_company)) +
-                        group("Without company name", list.filter((t) => t.no_company)) : opts(list));
-  if (v && v !== "none" && !list.some((x) => x.id === v)) o += opt(v, v + " (missing)", true);
+  const v = j[f] || "", hasCompany = !!(j.company || "").trim();
+  // all = everything that exists; list = what this row may choose from; defId = what "Default" means for it
+  const all = f === "template" ? S.templates : f === "cover" ? S.covers : S.resumes;
+  const defId = f === "template" ? defaultTpl(j) : f === "cover" ? S.active_cover : S.active_resume;
+  // a row with a company is offered the with-company emails, one without the without-company emails
+  const list = f === "template" ? all.filter((t) => !!t.no_company === !hasCompany) : all;
+  const isDefault = !v || v === defId || (f === "cover" && v === "none" && !S.active_cover);
+  // the default is listed once, as "Default · …" — never again by name
+  let o = opt("", "Default · " + (nameOf(all, defId) || (f === "cover" ? "no cover" : "none")), isDefault);
+  if (f === "cover" && S.active_cover) o += opt("none", "No cover letter", v === "none");
+  o += list.filter((x) => x.id !== defId).map((x) => opt(x.id, x.name, x.id === v)).join("");
+  if (!isDefault && v !== "none" && !list.some((x) => x.id === v))      // a pick from the other kind, or one that was deleted
+    o += opt(v, (nameOf(all, v) || v + " (missing)"), true);
   return '<td><select data-i="' + i + '" data-f="' + f + '">' + o + "</select></td>";
 }
 
@@ -675,14 +678,15 @@ $("logRange").addEventListener("click", (e) => {
 
 function renderLog() {
   document.querySelectorAll("#logRange button").forEach((b) => b.classList.toggle("on", b.dataset.r === LOGRANGE));
-  if (!S.sent_log.length) {
+  const shown = S.sent_log.filter((r) => r.result !== "reset");     // "reset" lines are bookkeeping, not mail
+  if (!shown.length) {
     $("logCount").textContent = "";
     $("logBody").innerHTML = '<div class="empty">Nothing has been sent yet. Emails show up here, ' +
       "grouped by day, as soon as they go out.</div>";
     return;
   }
   const from = $("logFrom").value, to = $("logTo").value;
-  const rows = S.sent_log.filter((r) => {
+  const rows = shown.filter((r) => {
     const d = (r.sent_at || "").slice(0, 10);
     return (!from || d >= from) && (!to || d <= to);
   }).sort((a, b) => (b.sent_at || "").localeCompare(a.sent_at || ""));

@@ -228,6 +228,18 @@ def save_jobs(rows):
         item = {k: str(row.get(k) or "").strip() for k in header}
         if any(item.values()):                # drop rows left completely blank
             clean.append(item)
+    was_sent = {(r.get("email", "").strip().lower(), r.get("company", "").strip().lower())
+                for r in (sa.load_jobs() if sa.JOBS_PATH.exists() else [])
+                if (r.get("status") or "").strip().lower() == "sent"}
+    blocked = sa.already_sent_addresses()
+    for item in clean:
+        # A row that was sent (it still has its sent time, or was "sent" until now) and is now
+        # not "sent": you chose to allow it again, so lift the sent-log block for it.
+        pair = (item.get("email", "").lower(), item.get("company", "").lower())
+        if (pair in blocked and (item.get("status") or "").strip().lower() != "sent"
+                and (item.get("sent_at") or pair in was_sent)):
+            sa.log_reset(item["email"], item["company"])
+            blocked.discard(pair)
     sa.save_jobs(clean, header)
     return len(clean)
 

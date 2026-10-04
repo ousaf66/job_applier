@@ -297,14 +297,17 @@ def load_picks(row, cfg, override=None):
 
 def already_sent_addresses():
     """Every address we have successfully mailed before — belt and braces
-    against sending the same person two applications."""
+    against sending the same person two applications. A later "reset" line (you set the
+    row back to "not sent") lifts the block for that address and company."""
     seen = set()
     if LOG_PATH.exists():
         with LOG_PATH.open(newline="", encoding="utf-8") as fh:
             for row in csv.DictReader(fh):
+                pair = (row.get("email", "").lower().strip(), row.get("company", "").lower().strip())
                 if row.get("result") == "sent":
-                    seen.add((row.get("email", "").lower().strip(),
-                              row.get("company", "").lower().strip()))
+                    seen.add(pair)
+                elif row.get("result") == "reset":
+                    seen.discard(pair)
     return seen
 
 
@@ -568,6 +571,17 @@ def log_send(row, msg, result):
             "job_url": row.get("job_url", ""),
             "result": result,
         })
+
+
+def log_reset(email, company):
+    """Record that a sent row was deliberately set back to "not sent", so it may be sent again."""
+    new = not LOG_PATH.exists()
+    with LOG_PATH.open("a", newline="", encoding="utf-8") as fh:
+        w = csv.DictWriter(fh, fieldnames=LOG_FIELDS)
+        if new:
+            w.writeheader()
+        w.writerow({"sent_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "company": company,
+                    "email": email, "result": "reset"})
 
 
 def save_jobs(rows, fieldnames):

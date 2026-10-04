@@ -245,6 +245,21 @@ def put_jobs(rows):
         item = {k: str(row.get(k) or "").strip() for k in JOB_FIELDS}
         if any(item.values()):
             clean.append(item)
+    was_sent = {(r.get("email", "").strip().lower(), r.get("company", "").strip().lower())
+                for r in (kv_get_json("jobs") or []) if (r.get("status") or "").strip().lower() == "sent"}
+    log = get_log()
+    blocked = sent_pairs(log)
+    for item in clean:
+        # A row that was sent (it still has its sent time, or was "sent" until now) and is now
+        # not "sent": you chose to allow it again, so lift the sent-log block for it.
+        pair = (item["email"].lower(), item["company"].lower())
+        if pair in blocked and item["status"].lower() != "sent" and (item["sent_at"] or pair in was_sent):
+            log.append({"sent_at": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), "company": item["company"],
+                        "role": item["role"], "email": item["email"], "subject": "", "source": "",
+                        "job_url": "", "result": "reset"})
+            blocked.discard(pair)
+    if len(log) != len(get_log()):
+        kv_set_json("sent_log", log[-1000:])
     kv_set_json("jobs", clean)
     return len(clean)
 
@@ -398,11 +413,15 @@ def append_log(entry):
 
 
 def sent_pairs(log):
+    """Addresses already mailed. A later "reset" entry (you set the row back to "not sent")
+    lifts the block for that address and company."""
     seen = set()
     for entry in log:
+        pair = (str(entry.get("email", "")).lower().strip(), str(entry.get("company", "")).lower().strip())
         if entry.get("result") == "sent":
-            seen.add((str(entry.get("email", "")).lower().strip(),
-                      str(entry.get("company", "")).lower().strip()))
+            seen.add(pair)
+        elif entry.get("result") == "reset":
+            seen.discard(pair)
     return seen
 
 
